@@ -1,5 +1,12 @@
+import hashlib
+import urllib
 import requests
 from bs4 import BeautifulSoup
+
+API_HOST = 'https://ssl.filmweb.pl/api'
+API_VERSION = '1.0'
+API_ID = 'android'
+API_KEY = 'qjcGhW2JnvGT9dfCt3uT_jozR3s'
 
 def get_user_id(user_name):
     """
