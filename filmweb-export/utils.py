@@ -25,3 +25,15 @@ def get_user_id(user_name):
         raise ValueError(f'Error parsing profile page: {str(e)}')
     assert fw_uid != '$user.id', f'user {user_name} does not exist'
     return fw_uid
+
+def get_params():
+    """
+    Format request parameters
+    """
+    params = {
+        'version': API_VERSION,
+        'appId': API_ID,
+        'methods': None,
+        'signature': None
+    }
+    return params
