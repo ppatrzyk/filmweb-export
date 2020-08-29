@@ -43,3 +43,6 @@ def get_params(user, password):
         'signature': signature,
     }
     return params
+
+# ^err on invalid, ^ok on valid
+# TODO implement remaining methods
