@@ -26,12 +26,11 @@ def get_user_id(user_name):
     assert fw_uid != '$user.id', f'user {user_name} does not exist'
     return fw_uid
 
-def get_params(user, password):
+def get_params(method, method_params):
     """
     Format request parameters
     """
-    # TODO take method as param for now login only
-    method = f'login [\"{user}\",\"{password}\",1]\n'
+    method = f'{method} {str(list(method_params))}\n'
     signature = f'{method}{API_ID}{API_KEY}'
     md5 = hashlib.md5()
     md5.update(signature.encode('utf-8'))
@@ -44,5 +43,12 @@ def get_params(user, password):
     }
     return params
 
-# ^err on invalid, ^ok on valid
+def login(user, password):
+    """
+    """
+    params = get_params(user, [user, password, 1])
+    return params
+    # ^err on invalid, ^ok on valid
+
+
 # TODO implement remaining methods
