@@ -46,9 +46,15 @@ def get_params(method, method_params):
 def login(user, password):
     """
     """
-    params = get_params(user, [user, password, 1])
+    params = get_params('login', [user, password, 1])
     return params
     # ^err on invalid, ^ok on valid
 
+def get_user_ratings(user_id):
+    """
+    """
+    params = get_params('getUserFilmVotes', [user_id, -1])
+    return params
+    # ^err on invalid, ^ok on valid
 
 # TODO implement remaining methods
