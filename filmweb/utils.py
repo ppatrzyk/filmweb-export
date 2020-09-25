@@ -37,9 +37,9 @@ def get_params(method, method_params):
     md5.update(signature.encode('utf-8'))
     signature = f'{API_VERSION},{md5.hexdigest()}'
     params = {
-        'version': API_VERSION,
-        'appId': API_ID,
-        'methods': method,
+        'version': urllib.parse.quote(API_VERSION),
+        'appId': urllib.parse.quote(API_ID),
+        'methods': urllib.parse.quote(method),
         'signature': signature,
     }
     return params
@@ -58,6 +58,7 @@ def get_user_ratings(user_id):
 
 def call_api(session, params, method='get'):
     kwargs = {'url': API_HOST, 'params': params, 'headers': HEADERS}
+    print(kwargs)
     if method == 'get':
         response = session.get(**kwargs)
     elif method == 'post':
