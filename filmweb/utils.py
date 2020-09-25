@@ -1,4 +1,5 @@
 import requests
+import urllib.parse
 from bs4 import BeautifulSoup
 
 HEADERS = {
@@ -12,6 +13,31 @@ HEADERS = {
     'Connection': 'keep-alive',
     'Upgrade-Insecure-Requests': 1,
 }
+LOGIN_POST_DATA = {
+    'login_redirect_url': 'https://ssl.filmweb.pl/',
+    '_prm': 'true',
+}
+
+def login(session, user, password):
+    """
+    Login
+    """
+    params = {
+        'j_username': user,
+        'j_password': password,
+        **LOGIN_POST_DATA
+    }
+    post_headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': 'https://www.filmweb.pl/login',
+        **HEADERS
+    }
+    response = session.post(
+        url='https://www.filmweb.pl/j_login',
+        data=urllib.parse.urlencode(post_headers),
+        headers=post_headers,
+    )
+    # TODO finish this
 
 # TODO strategy 2
 # POST https://www.filmweb.pl/j_login
@@ -22,3 +48,7 @@ HEADERS = {
 # 'Content-Type': 'application/x-www-form-urlencoded'
 # 'Referer': 'https://www.filmweb.pl/login'
 #      otherwise https://www.filmweb.pl/user/USER/films
+
+# login https://www.filmweb.pl/login?error=bad.credentials IF FAIL, otherwise /films
+
+# https://www.filmweb.pl/logout
