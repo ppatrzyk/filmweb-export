@@ -1,7 +1,17 @@
 import requests
 from bs4 import BeautifulSoup
 
-HEADERS = {'User-Agent': 'None'}
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0',
+    'Host': 'www.filmweb.pl',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Origin': 'https://www.filmweb.pl',
+    'DNT': 1,
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': 1,
+}
 
 # TODO strategy 2
 # POST https://www.filmweb.pl/j_login
@@ -9,15 +19,6 @@ HEADERS = {'User-Agent': 'None'}
 # https://www.filmweb.pl/user/USER/films?page=4
 
 # POST /j_login HTTP/1.1
-# Host: www.filmweb.pl
-# User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0
-# Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
-# Accept-Language: en-US,en;q=0.5
-# Accept-Encoding: gzip, deflate, br
-# Content-Type: application/x-www-form-urlencoded
-# Content-Length: 138
-# Origin: https://www.filmweb.pl
-# DNT: 1
-# Connection: keep-alive
-# Referer: https://www.filmweb.pl/login
-# Upgrade-Insecure-Requests: 1
+# 'Content-Type': 'application/x-www-form-urlencoded'
+# 'Referer': 'https://www.filmweb.pl/login'
+#      otherwise https://www.filmweb.pl/user/USER/films
