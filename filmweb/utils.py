@@ -7,6 +7,7 @@ API_HOST = 'https://ssl.filmweb.pl/api'
 API_VERSION = '1.0'
 API_ID = 'android'
 API_KEY = 'qjcGhW2JnvGT9dfCt3uT_jozR3s'
+HEADERS = {'User-Agent': 'None'}
 
 def get_user_id(user_name):
     """
@@ -48,13 +49,25 @@ def login(user, password):
     """
     params = get_params('login', [user, password, 1])
     return params
-    # ^err on invalid, ^ok on valid
 
 def get_user_ratings(user_id):
     """
     """
     params = get_params('getUserFilmVotes', [user_id, -1])
     return params
-    # ^err on invalid, ^ok on valid
+
+def call_api(session, params, method='get'):
+    kwargs = {'url': API_HOST, 'params': params, 'headers': HEADERS}
+    if method == 'get':
+        response = session.get(**kwargs)
+    elif method == 'post':
+        response = session.post(**kwargs)
+    else:
+        raise ValueError(f'Invalid method {method}')
+    assert response.status_code == 200, 'Server error'
+    print(response.text)
 
 # TODO implement remaining methods
+# if not logged in UserNotLoggedInException regex check
+# session.cookies.clear() at the end
+# ^err on invalid, ^ok on valid ^exc on exception
