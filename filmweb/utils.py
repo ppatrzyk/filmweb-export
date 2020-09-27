@@ -1,3 +1,4 @@
+import time
 import requests
 import urllib.parse
 from bs4 import BeautifulSoup
@@ -9,9 +10,9 @@ HEADERS = {
     'Accept-Language': 'en-US,en;q=0.5',
     'Accept-Encoding': 'gzip, deflate, br',
     'Origin': 'https://www.filmweb.pl',
-    'DNT': 1,
+    'DNT': '1',
     'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': 1,
+    'Upgrade-Insecure-Requests': '1',
 }
 LOGIN_POST_DATA = {
     'login_redirect_url': 'https://ssl.filmweb.pl/',
@@ -30,13 +31,16 @@ def login(session, user, password):
     post_headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Referer': 'https://www.filmweb.pl/login',
+        'Cookie': f'canProfile=true_{int(time.time())}',
         **HEADERS
     }
     response = session.post(
         url='https://www.filmweb.pl/j_login',
-        data=urllib.parse.urlencode(post_headers),
+        data=urllib.parse.urlencode(params),
         headers=post_headers,
     )
+    response.raise_for_status()
+    print(response.url)
     # TODO finish this
 
 # TODO strategy 2
@@ -52,3 +56,5 @@ def login(session, user, password):
 # login https://www.filmweb.pl/login?error=bad.credentials IF FAIL, otherwise /films
 
 # https://www.filmweb.pl/logout
+
+# session.cookies.clear()
