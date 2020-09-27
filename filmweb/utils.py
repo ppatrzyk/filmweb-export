@@ -1,5 +1,6 @@
 import re
 import time
+import json
 import requests
 import urllib.parse
 from bs4 import BeautifulSoup
@@ -18,6 +19,12 @@ HEADERS = {
 LOGIN_POST_DATA = {
     'login_redirect_url': 'https://ssl.filmweb.pl/',
     '_prm': 'true',
+}
+ATTRS_MAPPING = {
+    'global_votes': 'data-count',
+    'global_rating': 'data-rate',
+    'duration_min': 'data-duration',
+    'year': 'data-release',
 }
 
 def login(session, user, password):
@@ -43,6 +50,25 @@ def login(session, user, password):
     response.raise_for_status()
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
     return True
+
+def get_page(n):
+    """
+    get page with films
+    """
+    # TODO requedt
+    user_data_container = soup.find('span', attrs={'data-source': 'userVotes'})
+    raw_votes = tuple(json.loads(script.contents[0]) for script in user_data_container.find_all('script'))
+    # TODO for each vote
+    film_info_container = soup.find('div', attrs={'id': 'filmPreview_IDHERE'})
+    film_data = {}
+    for el in film_info_container.find_all():
+        for key, data_attr in ATTRS_MAPPING.items():
+            try:
+                film_data[key] = el[data_attr]
+            except:
+                continue
+
+
 
 # TODO strategy 2
 # POST https://www.filmweb.pl/j_login
