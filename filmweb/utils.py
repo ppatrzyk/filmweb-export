@@ -1,3 +1,4 @@
+import re
 import time
 import requests
 import urllib.parse
@@ -40,8 +41,8 @@ def login(session, user, password):
         headers=post_headers,
     )
     response.raise_for_status()
-    print(response.url)
-    # TODO finish this
+    assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
+    return True
 
 # TODO strategy 2
 # POST https://www.filmweb.pl/j_login
@@ -58,3 +59,7 @@ def login(session, user, password):
 # https://www.filmweb.pl/logout
 
 # session.cookies.clear()
+
+# span blockHeader__titleInfoCount TOTAL
+
+# 25 per page COUNT
