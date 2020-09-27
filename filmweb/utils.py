@@ -27,6 +27,18 @@ ATTRS_MAPPING = {
     'year': 'data-release',
 }
 
+# LISTS_MAPPING = {
+#     'directors': 'filmPreview__info--directors',
+#     'countries': 'filmPreview__info--countries',
+#     'genres': 'filmPreview__info--genres',
+# }
+
+# filmPreview__originalTitle contents[0]
+# filmPreview__title contents[0]
+
+# filmPreview__year - attr 'content'
+# filmPreview__link - attr 'href'
+
 def login(session, user, password):
     """
     Login
@@ -48,6 +60,7 @@ def login(session, user, password):
         headers=post_headers,
     )
     response.raise_for_status()
+    # https://www.filmweb.pl/login?error=bad.credentials IF FAIL
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
     return True
 
@@ -67,20 +80,12 @@ def get_page(n):
                 film_data[key] = el[data_attr]
             except:
                 continue
+    pass
+    # TODO remaining data values
+    # separate get/parse functions
 
 
-
-# TODO strategy 2
-# POST https://www.filmweb.pl/j_login
-# j_username=USER&j_password=PASS&_login_redirect_url=https%253A%252F%252Fssl.filmweb.pl%252F&_prm=true
 # https://www.filmweb.pl/user/USER/films?page=4
-
-# POST /j_login HTTP/1.1
-# 'Content-Type': 'application/x-www-form-urlencoded'
-# 'Referer': 'https://www.filmweb.pl/login'
-#      otherwise https://www.filmweb.pl/user/USER/films
-
-# login https://www.filmweb.pl/login?error=bad.credentials IF FAIL, otherwise /films
 
 # https://www.filmweb.pl/logout
 
