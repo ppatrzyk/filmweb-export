@@ -78,6 +78,7 @@ def parse_page(content):
     for movie in raw_votes:
         movie_id = movie.get('eId')
         film_info_container = soup.find('div', attrs={'id': f'filmPreview_{movie_id}'})
+        assert film_info_container, f'no container for {movie}'
         film_data = {}
         for el in film_info_container.find_all():
             for key, data_attr in ATTRS_MAPPING.items():
@@ -86,12 +87,21 @@ def parse_page(content):
                 except:
                     continue
         for key, css_class in LISTS_MAPPING.items():
-            data_container = soup.find(re.compile('.*'), attrs={'class': css_class})
-            data = tuple(el.text for el in data_container.find_all('li'))
+            data_container = film_info_container.find(re.compile('.*'), attrs={'class': css_class})
+            try:
+                data = tuple(el.text for el in data_container.find_all('li'))
+            except:
+                data = tuple()
             film_data[key] = data
-        original_title = soup.find(re.compile('.*'), attrs={'class': 'filmPreview__originalTitle'}).contents[0]
-        pl_title = soup.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
-        link = soup.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
+        try:
+            original_title = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__originalTitle'}).contents[0]
+        except:
+            original_title = None
+        try:
+            pl_title = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
+        except:
+            pl_title = None
+        link = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
         timestamp = movie.get('t')
         clean_movie = {
             **film_data,
