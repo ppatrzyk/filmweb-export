@@ -92,7 +92,7 @@ def parse_page(content):
                     continue
         for key, css_class in LISTS_MAPPING.items():
             data_container = soup.find(re.compile('.*'), attrs={'class': css_class})
-            data = tuple(el.contents[0] for el in data_container.find_all('li'))
+            data = tuple(el.text for el in data_container.find_all('li'))
             film_data[key] = data
         timestamp = movie.get('t')
         clean_movie = {
