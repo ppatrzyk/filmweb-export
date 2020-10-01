@@ -22,19 +22,20 @@ from utils import (
 
 MOVIES_PER_PAGE = 25
 
-def main():
-    args= docopt(__doc__)
-    print('main called')
-    print(args)
-    user = None
-    password = None
+def main(user, password):
+    # args= docopt(__doc__)
+    # print('main called')
+    # print(args)
+    # user = None
+    # password = None
     session = requests.session()
     login(session, user, password)
     votes = get_vote_count(get_page(session, user))
     pages = ceil(votes/MOVIES_PER_PAGE)
     pool = Pool(processes=4)
-    raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_page, range(1, pages+1)), total=pages))
-    movies = tuple(tqdm.tqdm(pool.imap_unordered(get_movie_ratings, raw_responses), total=pages))
+    get_page_args = ((session, user, page) for page in range(1, pages+1))
+    raw_responses = tuple(tqdm.tqdm(pool.starmap(get_page, get_page_args), total=pages))
+    movies = tuple(tqdm.tqdm(pool.map(get_movie_ratings, raw_responses), total=pages))
     print(movies)
     logout(session)
     session.cookies.clear()

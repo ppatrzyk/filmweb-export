@@ -80,8 +80,12 @@ def get_vote_count(content):
         content: raw html
     """
     soup = BeautifulSoup(content)
-    ratings = int(soup.find('div', attrs={'class': 'userPreview'})['data-votes-count'])
-    return ratings
+    try:
+        ratings = soup.find('div', attrs={'class': 'userPreview'})['data-votes-count']
+    except:
+        # if only one media type on profile?
+        ratings = soup.find('span', attrs={'class': 'blockHeader__titleInfoCount'}).text
+    return int(ratings)
 
 def get_movie_ratings(content):
     """
