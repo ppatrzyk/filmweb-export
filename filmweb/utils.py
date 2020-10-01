@@ -101,7 +101,7 @@ def parse_page(content):
             pl_title = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
         except:
             pl_title = None
-        link = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
+        link = 'https://www.filmweb.pl' + film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
         timestamp = movie.get('t')
         clean_movie = {
             **film_data,
