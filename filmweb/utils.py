@@ -71,15 +71,16 @@ def get_page(n):
     # TODO requedt
     user_data_container = soup.find('span', attrs={'data-source': 'userVotes'})
     raw_votes = tuple(json.loads(script.contents[0]) for script in user_data_container.find_all('script'))
-    # TODO for each vote
-    film_info_container = soup.find('div', attrs={'id': 'filmPreview_IDHERE'})
-    film_data = {}
-    for el in film_info_container.find_all():
-        for key, data_attr in ATTRS_MAPPING.items():
-            try:
-                film_data[key] = el[data_attr]
-            except:
-                continue
+    for movie in raw_votes:
+        movie_id = movie.get('eId')
+        film_info_container = soup.find('div', attrs={'id': f'filmPreview_{movie_id}'})
+        film_data = {}
+        for el in film_info_container.find_all():
+            for key, data_attr in ATTRS_MAPPING.items():
+                try:
+                    film_data[key] = el[data_attr]
+                except:
+                    continue
     pass
     # TODO remaining data values
     # separate get/parse functions
