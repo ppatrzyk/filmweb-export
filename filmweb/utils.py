@@ -64,11 +64,11 @@ def login(session, user, password):
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
     return True
 
-def get_page(session, n):
+def get_page(session, user, n):
     """
     get page with films
     """
-    url = 'https://www.filmweb.pl/user/USER/films'
+    url = f'https://www.filmweb.pl/user/{user}/films'
     params = {'page': n}
     content = session.get(url, params=params).text
     return content
