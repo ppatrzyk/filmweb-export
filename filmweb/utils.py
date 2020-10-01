@@ -68,8 +68,9 @@ def get_page(n):
     """
     get page with films
     """
-    # TODO requedt
-    content = None
+    url = 'https://www.filmweb.pl/user/USER/films'
+    params = {'page': n}
+    content = requests.get(url, params=params).text
     return content
 
 def parse_page(content):
@@ -102,10 +103,7 @@ def parse_page(content):
             'user_vote': movie.get('r')
         }
         movies.append(clean_movie)
-    return movies
-
-
-# https://www.filmweb.pl/user/USER/films?page=4
+    return movies 
 
 # https://www.filmweb.pl/logout
 
