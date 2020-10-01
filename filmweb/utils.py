@@ -1,7 +1,6 @@
 import re
 import time
 import json
-import requests
 import urllib.parse
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -126,14 +125,3 @@ def get_movie_ratings(content):
         }
         movies.append(clean_movie)
     return movies 
-
-# https://www.filmweb.pl/logout
-
-# session.cookies.clear()
-
-# span blockHeader__titleInfoCount TOTAL
-
-# 25 per page COUNT
-
-# vote count
-# int(soup.find('div', attrs={'class': 'userPreview'})['data-votes-count'])
