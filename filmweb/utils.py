@@ -4,6 +4,7 @@ import json
 import requests
 import urllib.parse
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0',
@@ -68,8 +69,17 @@ def get_page(n):
     get page with films
     """
     # TODO requedt
+    content = None
+    return content
+
+def parse_page(content):
+    """
+    get page with films
+    """
+    soup = BeautifulSoup(content)
     user_data_container = soup.find('span', attrs={'data-source': 'userVotes'})
     raw_votes = tuple(json.loads(script.contents[0]) for script in user_data_container.find_all('script'))
+    movies = []
     for movie in raw_votes:
         movie_id = movie.get('eId')
         film_info_container = soup.find('div', attrs={'id': f'filmPreview_{movie_id}'})
@@ -80,13 +90,19 @@ def get_page(n):
                     film_data[key] = el[data_attr]
                 except:
                     continue
-            for key, css_class in LISTS_MAPPING.items():
-                data_container = soup.find(re.compile('.*'), attrs={'class': css_class})
-                data = tuple(el.contents[0] for el in data_container.find_all('li'))
-                film_data[key] = data
-    pass
-    # TODO remaining data values
-    # separate get/parse functions
+        for key, css_class in LISTS_MAPPING.items():
+            data_container = soup.find(re.compile('.*'), attrs={'class': css_class})
+            data = tuple(el.contents[0] for el in data_container.find_all('li'))
+            film_data[key] = data
+        timestamp = movie.get('t')
+        clean_movie = {
+            **film_data,
+            'timestamp': timestamp,
+            'iso_date': datetime.fromtimestamp(timestamp).isoformat(),
+            'user_vote': movie.get('r')
+        }
+        movies.append(clean_movie)
+    return movies
 
 
 # https://www.filmweb.pl/user/USER/films?page=4
