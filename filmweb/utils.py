@@ -33,12 +33,6 @@ LISTS_MAPPING = {
     'genres': 'filmPreview__info--genres',
 }
 
-# filmPreview__originalTitle contents[0]
-# filmPreview__title contents[0]
-
-# filmPreview__year - attr 'content'
-# filmPreview__link - attr 'href'
-
 def login(session, user, password):
     """
     Login
@@ -95,12 +89,18 @@ def parse_page(content):
             data_container = soup.find(re.compile('.*'), attrs={'class': css_class})
             data = tuple(el.text for el in data_container.find_all('li'))
             film_data[key] = data
+        original_title = soup.find(re.compile('.*'), attrs={'class': 'filmPreview__originalTitle'}).contents[0]
+        pl_title = soup.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
+        link = soup.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
         timestamp = movie.get('t')
         clean_movie = {
             **film_data,
             'timestamp': timestamp,
             'iso_date': datetime.fromtimestamp(timestamp).isoformat(),
-            'user_vote': movie.get('r')
+            'user_vote': movie.get('r'),
+            'original_title': original_title,
+            'pl_title': pl_title,
+            'link': link,
         }
         movies.append(clean_movie)
     return movies 
