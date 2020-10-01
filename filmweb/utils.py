@@ -94,3 +94,6 @@ def get_page(n):
 # span blockHeader__titleInfoCount TOTAL
 
 # 25 per page COUNT
+
+# vote count
+# int(soup.find('div', attrs={'class': 'userPreview'})['data-votes-count'])
