@@ -26,12 +26,11 @@ ATTRS_MAPPING = {
     'duration_min': 'data-duration',
     'year': 'data-release',
 }
-
-# LISTS_MAPPING = {
-#     'directors': 'filmPreview__info--directors',
-#     'countries': 'filmPreview__info--countries',
-#     'genres': 'filmPreview__info--genres',
-# }
+LISTS_MAPPING = {
+    'directors': 'filmPreview__info--directors',
+    'countries': 'filmPreview__info--countries',
+    'genres': 'filmPreview__info--genres',
+}
 
 # filmPreview__originalTitle contents[0]
 # filmPreview__title contents[0]
@@ -81,6 +80,10 @@ def get_page(n):
                     film_data[key] = el[data_attr]
                 except:
                     continue
+            for key, css_class in LISTS_MAPPING.items():
+                data_container = soup.find(re.compile('.*'), attrs={'class': css_class})
+                data = tuple(el.contents[0] for el in data_container.find_all('li'))
+                film_data[key] = data
     pass
     # TODO remaining data values
     # separate get/parse functions
