@@ -58,18 +58,30 @@ def login(session, user, password):
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
     return True
 
-def get_page(session, user, n):
+def get_page(session, user, n=1):
     """
-    get page with films
+    request films page
     """
     url = f'https://www.filmweb.pl/user/{user}/films'
     params = {'page': n}
     content = session.get(url, params=params).text
     return content
 
-def parse_page(content):
+def get_vote_count(content):
     """
-    get page with films
+    Parse films page to extract total count of votes
+    Args:
+        content: raw html
+    """
+    soup = BeautifulSoup(content)
+    ratings = int(soup.find('div', attrs={'class': 'userPreview'})['data-votes-count'])
+    return ratings
+
+def get_movie_ratings(content):
+    """
+    Parse films page to extract movie ratings
+    Args:
+        content: raw html
     """
     soup = BeautifulSoup(content)
     user_data_container = soup.find('span', attrs={'data-source': 'userVotes'})
