@@ -57,6 +57,13 @@ def login(session, user, password):
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
     return True
 
+def logout(session):
+    """
+    Logout user
+    """
+    session.get('https://www.filmweb.pl/logout')
+    return True
+
 def get_page(session, user, n=1):
     """
     request films page
