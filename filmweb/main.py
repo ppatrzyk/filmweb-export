@@ -41,12 +41,10 @@ def main(user, password):
     raw_responses = tuple(tqdm.tqdm(pool.starmap(get_page, get_page_args), total=pages))
     movies = tuple(tqdm.tqdm(pool.map(get_movie_ratings, raw_responses), total=pages))
     pool.close()
-    print(movies)
     logout(session)
     session.cookies.clear()
     session.close()
     write_data(movies, data_format)
-
 
 if __name__ == "__main__":
     main()
