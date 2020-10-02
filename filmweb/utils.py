@@ -138,10 +138,15 @@ def get_movie_ratings(content):
         movies.append(clean_movie)
     # necessary for multiprocessing pickle to work
     movies = json.dumps(movies)
-    return movies 
+    return movies
 
-def write_data(movies, format='json'):
+def write_data(movies, data_format='json'):
     """
     """
     movies_clean = itertools.chain.from_iterable((json.loads(el) for el in movies))
-    print(tuple(movies_clean))
+    if data_format == 'json':
+        pass
+    elif data_format == 'csv':
+        pass
+    else:
+        raise ValueError(f'unsupported format {data_format}')
