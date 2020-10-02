@@ -8,7 +8,6 @@ Options:
 """
 
 from docopt import docopt
-import json
 from math import ceil
 from copy import deepcopy
 import requests
@@ -20,6 +19,7 @@ from .utils import (
     get_vote_count,
     login,
     logout,
+    write_data,
 )
 
 PARALLEL_PROC = 4
@@ -31,6 +31,7 @@ def main(user, password):
     # print(args)
     # user = None
     # password = None
+    data_format = 'json'
     session = requests.session()
     login(session, user, password)
     votes = get_vote_count(get_page(session, user))
@@ -44,6 +45,7 @@ def main(user, password):
     logout(session)
     session.cookies.clear()
     session.close()
+    write_data(movies, data_format)
 
 
 if __name__ == "__main__":

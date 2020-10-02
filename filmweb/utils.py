@@ -1,6 +1,7 @@
 import re
 import time
 import json
+import itertools
 import urllib.parse
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -138,3 +139,9 @@ def get_movie_ratings(content):
     # necessary for multiprocessing pickle to work
     movies = json.dumps(movies)
     return movies 
+
+def write_data(movies, format='json'):
+    """
+    """
+    movies_clean = itertools.chain.from_iterable((json.loads(el) for el in movies))
+    print(tuple(movies_clean))
