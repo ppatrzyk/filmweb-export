@@ -135,4 +135,6 @@ def get_movie_ratings(content):
             'link': link,
         }
         movies.append(clean_movie)
+    # necessary for multiprocessing pickle to work
+    movies = json.dumps(movies)
     return movies 

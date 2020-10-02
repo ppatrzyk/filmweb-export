@@ -8,6 +8,7 @@ Options:
 """
 
 from docopt import docopt
+import json
 from math import ceil
 from copy import deepcopy
 import requests
@@ -36,7 +37,6 @@ def main(user, password):
     pool = Pool(processes=4)
     get_page_args = ((deepcopy(session), user, page) for page in range(1, pages+1))
     raw_responses = tuple(tqdm.tqdm(pool.starmap(get_page, get_page_args), total=pages))
-    # TODO this throws multiprocessing.pool.MaybeEncodingError
     movies = tuple(tqdm.tqdm(pool.map(get_movie_ratings, raw_responses), total=pages))
     print(movies)
     logout(session)
