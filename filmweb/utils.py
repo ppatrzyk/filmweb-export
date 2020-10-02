@@ -80,7 +80,7 @@ def get_vote_count(content):
     Args:
         content: raw html
     """
-    soup = BeautifulSoup(content)
+    soup = BeautifulSoup(content, 'html.parser')
     try:
         ratings = soup.find('div', attrs={'class': 'userPreview'})['data-votes-count']
     except:
@@ -94,7 +94,7 @@ def get_movie_ratings(content):
     Args:
         content: raw html
     """
-    soup = BeautifulSoup(content)
+    soup = BeautifulSoup(content, 'html.parser')
     user_data_container = soup.find('span', attrs={'data-source': 'userVotes'})
     raw_votes = tuple(json.loads(script.contents[0]) for script in user_data_container.find_all('script'))
     movies = []
