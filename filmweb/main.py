@@ -31,7 +31,7 @@ def main(user, password):
     # print(args)
     # user = None
     # password = None
-    data_format = 'json'
+    data_format = 'csv'
     session = requests.session()
     login(session, user, password)
     votes = get_vote_count(get_page(session, user))

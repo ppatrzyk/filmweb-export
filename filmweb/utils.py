@@ -147,16 +147,17 @@ def write_data(movies, user, data_format='json'):
     assert movies, 'no data to write'
     date = datetime.now().strftime('%Y%m%d')
     movies_clean = itertools.chain.from_iterable((json.loads(el) for el in movies))
+    movies_clean = tuple(movies_clean)
     if data_format == 'json':
         file_name = f'{user}_filmweb_{date}.json'
         with open(file_name, 'w') as out_file:
             out_file.write(json.dumps(movies_clean))
     elif data_format == 'csv':
         file_name = f'{user}_filmweb_{date}.csv'
-        movies_clean = tuple(movies_clean)
         field_names = tuple(movies_clean[0].keys())
         with open(file_name, 'w') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=field_names, dialect='unix')
+            writer.writeheader()
             for movie in movies_clean:
                 writer.writerow(movie)
     else:
