@@ -140,13 +140,17 @@ def get_movie_ratings(content):
     movies = json.dumps(movies)
     return movies
 
-def write_data(movies, data_format='json'):
+def write_data(movies, user, data_format='json'):
     """
     """
+    date = datetime.now().strftime('%Y%m%d')
     movies_clean = itertools.chain.from_iterable((json.loads(el) for el in movies))
     if data_format == 'json':
-        pass
+        file_name = f'{user}_filmweb_{date}.json'
+        with open(file_name, 'w') as out_file:
+            out_file.write(json.dumps(movies))
     elif data_format == 'csv':
+        file_name = f'{user}_filmweb_{date}.csv'
         pass
     else:
         raise ValueError(f'unsupported format {data_format}')

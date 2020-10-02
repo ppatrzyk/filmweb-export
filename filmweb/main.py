@@ -44,7 +44,7 @@ def main(user, password):
     logout(session)
     session.cookies.clear()
     session.close()
-    write_data(movies, data_format)
+    write_data(movies, user, data_format)
 
 if __name__ == "__main__":
     main()
