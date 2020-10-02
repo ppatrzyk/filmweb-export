@@ -29,6 +29,7 @@ PARALLEL_PROC = 4
 MOVIES_PER_PAGE = 25
 
 def main():
+    logging.basicConfig(level=logging.INFO) 
     args = docopt(__doc__)
     user = args['<username>']
     password = args['<password>']
@@ -41,13 +42,16 @@ def main():
     pages = ceil(votes/MOVIES_PER_PAGE)
     pool = Pool(processes=PARALLEL_PROC)
     get_page_args = ((deepcopy(session), get_user, page) for page in range(1, pages+1))
+    logging.info('Fetching data...')
     raw_responses = tuple(tqdm.tqdm(pool.starmap(get_page, get_page_args), total=pages))
+    logging.info('Parsing data...')
     movies = tuple(pool.map(get_movie_ratings, raw_responses))
     pool.close()
     logout(session)
     session.cookies.clear()
     session.close()
-    write_data(movies, get_user, file_format)
+    file_name = write_data(movies, get_user, file_format)
+    logging.info(f'{file_name} written!')
 
 if __name__ == "__main__":
     main()
