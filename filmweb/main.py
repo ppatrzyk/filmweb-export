@@ -41,7 +41,7 @@ def main():
     pages = ceil(votes/MOVIES_PER_PAGE)
     pool = Pool(processes=PARALLEL_PROC)
     get_page_args = ((deepcopy(session), get_user, page) for page in range(1, pages+1))
-    raw_responses = tuple(tqdm.tqdm(pool.starmap(get_page, get_page_args)))
+    raw_responses = tuple(tqdm.tqdm(pool.starmap(get_page, get_page_args), total=pages))
     movies = tuple(pool.map(get_movie_ratings, raw_responses), total=pages)
     pool.close()
     logout(session)
