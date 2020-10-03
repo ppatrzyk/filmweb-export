@@ -1,12 +1,13 @@
 """filmweb
 
 Usage:
-    filmweb <username> <password> [--format=<fileformat>] [--get_user=<username>]
+    filmweb <username> <password> [--format=<fileformat>] [--get_user=<username>] [--debug]
 
 Options:
     -h --help                     Show this screen
     -f --format=<fileformat>      Output file format: csv (default) or json
     -u --get_user=<username>      User whose ratings are fetched (default: user logging in)
+    -d --debug                    Debug prints
 """
 
 from docopt import docopt
@@ -29,13 +30,16 @@ PARALLEL_PROC = 4
 MOVIES_PER_PAGE = 25
 
 def main():
-    logging.basicConfig(level=logging.INFO) 
     args = docopt(__doc__)
     user = args['<username>']
     password = args['<password>']
     file_format = (args['--format'] or 'csv').lower()
     assert file_format in ('csv', 'json'), 'Supported file formats: csv, JSON'
     get_user = args['--get_user'] or user
+    if args['--debug']:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
     session = requests.session()
     login(session, user, password)
     votes = get_vote_count(get_page((session, get_user, 1)))
