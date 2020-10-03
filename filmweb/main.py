@@ -48,7 +48,7 @@ def main():
         'friend_check': None
     }
     if user != get_user:
-        get_vote_count_args['friend_check'] = user_id
+        get_vote_count_kwargs['friend_check'] = user_id
     votes = get_vote_count(**get_vote_count_kwargs)
     pages = ceil(votes/MOVIES_PER_PAGE)
     pool = Pool(processes=PARALLEL_PROC)

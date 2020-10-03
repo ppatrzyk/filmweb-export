@@ -57,8 +57,8 @@ def login(session, user, password):
     response.raise_for_status()
     # https://www.filmweb.pl/login?error=bad.credentials IF FAIL
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
-    # TODO extract
-    user_id = None
+    soup = BeautifulSoup(response.text, 'html.parser')
+    user_id = soup.find('div', attrs={'class': 'userPreview'})['data-id']
     return user_id
 
 def logout(session):
@@ -96,10 +96,9 @@ def get_vote_count(session, user, friend_check=None):
     except Exception as e:
         raise ValueError(f'No user {user} found: {str(e)}')
     soup = BeautifulSoup(response.text, 'html.parser')
-    # checks if all data available
     if friend_check:
-        # TODO check if among ids
-        pass
+        friends_ids = soup.find('div', attrs={'class': 'userPreview'})['data-friends-ids']
+        assert bool(re.search(friend_check, friends_ids)), f'No access, user {user} is not a friend'
     try:
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
