@@ -2,6 +2,7 @@ import re
 import time
 import csv
 import json
+import logging
 import itertools
 import urllib.parse
 from bs4 import BeautifulSoup
@@ -54,6 +55,7 @@ def login(session, user, password):
         data=urllib.parse.urlencode(params),
         headers=post_headers,
     )
+    logging.debug(f'Login done, reached: {response.url}')
     response.raise_for_status()
     # https://www.filmweb.pl/login?error=bad.credentials IF FAIL
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
