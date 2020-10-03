@@ -75,6 +75,8 @@ def get_user_id(session, user):
     url = f'https://www.filmweb.pl/user/{user}'
     response = session.get(url, headers=HEADERS)
     response.raise_for_status()
+    logging.debug(f'Id check, reached {response.url}')
+    assert response.url == url, f'User {user} does not exist'
     soup = BeautifulSoup(response.text, 'html.parser')
     user_id = soup.find('div', attrs={'class': 'userPreview'})['data-id']
     return user_id
@@ -108,7 +110,10 @@ def get_vote_count(session, user, friend_check=None):
         raise ValueError(f'No user {user} found: {str(e)}')
     soup = BeautifulSoup(response.text, 'html.parser')
     if friend_check:
-        friends_ids = soup.find('div', attrs={'class': 'userPreview'})['data-friends-ids']
+        try:
+            friends_ids = soup.find('div', attrs={'class': 'userPreview'})['data-friends-ids']
+        except Exception as e:
+            raise ValueError(f'User {user} has no friends: {str(e)}')
         assert bool(re.search(friend_check, friends_ids)), f'No access, user {user} is not a friend'
     try:
         # TODO? future: other types than films are counted here as well 
