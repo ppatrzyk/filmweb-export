@@ -37,7 +37,7 @@ def main():
     assert file_format in ('csv', 'json'), 'Supported file formats: csv, JSON'
     get_user = args['--get_user'] or user
     session = requests.session()
-    login(session, get_user, password)
+    login(session, user, password)
     votes = get_vote_count(get_page(session, get_user))
     pages = ceil(votes/MOVIES_PER_PAGE)
     pool = Pool(processes=PARALLEL_PROC)
