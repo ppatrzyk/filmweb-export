@@ -68,3 +68,8 @@ Options:
 - original_title: _tytuł oryginalny_
 - pl_title: _tytuł polski_
 - link: _strona filmu_
+
+## Znane ograniczenia:
+
+- Logowanie tylko kontem filmweb,
+- Eksport tylko ocen filmów, inne (np. seriale) niedostępne,
