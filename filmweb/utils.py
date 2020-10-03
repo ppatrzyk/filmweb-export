@@ -66,10 +66,12 @@ def logout(session):
     session.get('https://www.filmweb.pl/logout')
     return True
 
-def get_page(session, user, n=1):
+def get_page(args):
     """
     request films page
     """
+    # this workaround is necessary because multiprocessing imap takes one arg only
+    (session, user, n) = args
     url = f'https://www.filmweb.pl/user/{user}/films'
     params = {'page': n}
     content = session.get(url, params=params).text
