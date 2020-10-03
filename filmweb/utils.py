@@ -92,8 +92,8 @@ def get_vote_count(session, user):
         raise ValueError(f'No user {user} found: {str(e)}')
     soup = BeautifulSoup(response.text, 'html.parser')
     # checks if all data available
-    limited = soup.find('div', attrs={'class': 'userVotesPage__limitedView'})
-    assert limited is None, f'no access to {user} ratings'
+    no_friend = soup.find('div', attrs={'class': 'friendSuggestBox'})
+    assert no_friend is None, f'no access to {user} ratings'
     try:
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
