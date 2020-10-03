@@ -87,7 +87,10 @@ def get_vote_count(session, user):
     content = session.get(url, headers=HEADERS).text
     soup = BeautifulSoup(content, 'html.parser')
     try:
-        ratings = soup.find('span', attrs={'class': 'votesInfoBox__vote'})['data-count-to-value']
+        # TODO? future: other types than films are counted here as well 
+        user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
+        user_info = json.loads(user_info_container.text)
+        ratings = user_info.get('votes').get('films')
     except Exception as e:
         raise ValueError(f'No ratings count found on website: {str(e)}')
     return int(ratings)
