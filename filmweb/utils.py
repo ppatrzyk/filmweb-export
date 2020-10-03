@@ -57,7 +57,9 @@ def login(session, user, password):
     response.raise_for_status()
     # https://www.filmweb.pl/login?error=bad.credentials IF FAIL
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
-    return True
+    # TODO extract
+    user_id = None
+    return user_id
 
 def logout(session):
     """
@@ -78,11 +80,14 @@ def get_page(args):
     response.raise_for_status()
     return response.text
 
-def get_vote_count(session, user):
+def get_vote_count(session, user, friend_check=None):
     """
     Parse films page to extract total count of votes
     Args:
-        content: raw html
+        session: requests session
+        user: user to get ratings for
+        friend_check: None when getting for logging in
+            otherwise need to check if the user has us in friends 
     """
     url = f'https://www.filmweb.pl/user/{user}'
     response = session.get(url, headers=HEADERS)
@@ -92,8 +97,9 @@ def get_vote_count(session, user):
         raise ValueError(f'No user {user} found: {str(e)}')
     soup = BeautifulSoup(response.text, 'html.parser')
     # checks if all data available
-    no_friend = soup.find('div', attrs={'class': 'friendSuggestBox'})
-    assert no_friend is None, f'no access to {user} ratings'
+    if friend_check:
+        # TODO check if among ids
+        pass
     try:
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})

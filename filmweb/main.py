@@ -41,8 +41,15 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     session = requests.session()
-    login(session, user, password)
-    votes = get_vote_count(session, get_user)
+    user_id = login(session, user, password)
+    get_vote_count_kwargs = {
+        'session': session,
+        'user': get_user,
+        'friend_check': None
+    }
+    if user != get_user:
+        get_vote_count_args['friend_check'] = user_id
+    votes = get_vote_count(**get_vote_count_kwargs)
     pages = ceil(votes/MOVIES_PER_PAGE)
     pool = Pool(processes=PARALLEL_PROC)
     get_page_args = ((deepcopy(session), get_user, page) for page in range(1, pages+1))
