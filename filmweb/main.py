@@ -42,7 +42,7 @@ def main():
         logging.basicConfig(level=logging.INFO)
     session = requests.session()
     login(session, user, password)
-    votes = get_vote_count(get_page((session, get_user, 1)))
+    votes = get_vote_count(get_page(session, get_user))
     pages = ceil(votes/MOVIES_PER_PAGE)
     pool = Pool(processes=PARALLEL_PROC)
     get_page_args = ((deepcopy(session), get_user, page) for page in range(1, pages+1))

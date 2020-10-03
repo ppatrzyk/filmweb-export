@@ -63,7 +63,7 @@ def logout(session):
     """
     Logout user
     """
-    session.get('https://www.filmweb.pl/logout')
+    session.get('https://www.filmweb.pl/logout', headers=HEADERS)
     return True
 
 def get_page(args):
@@ -74,21 +74,22 @@ def get_page(args):
     (session, user, n) = args
     url = f'https://www.filmweb.pl/user/{user}/films'
     params = {'page': n}
-    content = session.get(url, params=params).text
+    content = session.get(url, params=params, headers=HEADERS).text
     return content
 
-def get_vote_count(content):
+def get_vote_count(session, user):
     """
     Parse films page to extract total count of votes
     Args:
         content: raw html
     """
+    url = f'https://www.filmweb.pl/user/{user}'
+    content = session.get(url, headers=HEADERS).text
     soup = BeautifulSoup(content, 'html.parser')
     try:
-        ratings = soup.find('div', attrs={'class': 'userPreview'})['data-votes-count']
-    except:
-        # if only one media type on profile?
-        ratings = soup.find('span', attrs={'class': 'blockHeader__titleInfoCount'}).text
+        ratings = soup.find('span', attrs={'class': 'votesInfoBox__vote'})['data-count-to-value']
+    except Exception as e:
+        raise ValueError(f'No ratings count found on website: {str(e)}')
     return int(ratings)
 
 def get_movie_ratings(content):
