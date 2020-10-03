@@ -86,8 +86,14 @@ def get_vote_count(session, user):
     """
     url = f'https://www.filmweb.pl/user/{user}'
     response = session.get(url, headers=HEADERS)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        raise ValueError(f'No user {user} found: {str(e)}')
     soup = BeautifulSoup(response.text, 'html.parser')
+    # checks if all data available
+    limited = soup.find('div', attrs={'class': 'userVotesPage__limitedView'})
+    assert limited is None, f'no access to {user} ratings'
     try:
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
