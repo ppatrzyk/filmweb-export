@@ -59,9 +59,7 @@ def login(session, user, password):
     response.raise_for_status()
     # https://www.filmweb.pl/login?error=bad.credentials IF FAIL
     assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
-    soup = BeautifulSoup(response.text, 'html.parser')
-    user_id = soup.find('div', attrs={'class': 'userPreview'})['data-id']
-    return user_id
+    return True
 
 def logout(session):
     """
@@ -69,6 +67,17 @@ def logout(session):
     """
     session.get('https://www.filmweb.pl/logout', headers=HEADERS)
     return True
+
+def get_user_id(session, user):
+    """
+    Gets user id (necessary for friendship check)
+    """
+    url = f'https://www.filmweb.pl/user/{user}'
+    response = session.get(url, headers=HEADERS)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'html.parser')
+    user_id = soup.find('div', attrs={'class': 'userPreview'})['data-id']
+    return user_id
 
 def get_page(args):
     """

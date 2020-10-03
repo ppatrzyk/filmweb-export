@@ -21,6 +21,7 @@ from .utils import (
     get_movie_ratings,
     get_page,
     get_vote_count,
+    get_user_id,
     login,
     logout,
     write_data,
@@ -41,13 +42,14 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     session = requests.session()
-    user_id = login(session, user, password)
+    login(session, user, password)
     get_vote_count_kwargs = {
         'session': session,
         'user': get_user,
         'friend_check': None
     }
     if user != get_user:
+        user_id = get_user_id(session, user)
         get_vote_count_kwargs['friend_check'] = user_id
     votes = get_vote_count(**get_vote_count_kwargs)
     pages = ceil(votes/MOVIES_PER_PAGE)
