@@ -74,8 +74,9 @@ def get_page(args):
     (session, user, n) = args
     url = f'https://www.filmweb.pl/user/{user}/films'
     params = {'page': n}
-    content = session.get(url, params=params, headers=HEADERS).text
-    return content
+    response = session.get(url, params=params, headers=HEADERS)
+    response.raise_for_status()
+    return response.text
 
 def get_vote_count(session, user):
     """
@@ -84,8 +85,9 @@ def get_vote_count(session, user):
         content: raw html
     """
     url = f'https://www.filmweb.pl/user/{user}'
-    content = session.get(url, headers=HEADERS).text
-    soup = BeautifulSoup(content, 'html.parser')
+    response = session.get(url, headers=HEADERS)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'html.parser')
     try:
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
@@ -93,7 +95,9 @@ def get_vote_count(session, user):
         ratings = user_info.get('votes').get('films')
     except Exception as e:
         raise ValueError(f'No ratings count found on website: {str(e)}')
-    return int(ratings)
+    ratings = int(ratings)
+    assert ratings > 0, 'no rating data available'
+    return ratings
 
 def get_movie_ratings(content):
     """
