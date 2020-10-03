@@ -59,7 +59,7 @@ def main():
         logging.info('Fetching data...')
         raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_page, get_page_args), total=pages))
         logging.info('Parsing data...')
-        movies = tuple(pool.map(get_movie_ratings, raw_responses))
+        movies = tuple(tqdm.tqdm(pool.imap_unordered(get_movie_ratings, raw_responses), total=pages))
         logout(session)
         file_name = write_data(movies, get_user, file_format)
         logging.info(f'{file_name} written!')

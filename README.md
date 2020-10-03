@@ -23,6 +23,7 @@ $ filmweb <LOGIN> <HASŁO>
 INFO:root:Fetching data...
 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 31/31 [00:06<00:00,  5.13it/s]
 INFO:root:Parsing data...
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 31/31 [00:06<00:00,  4.52it/s]
 INFO:root:pieca_filmweb_20201003.csv written!
 $ head -3 pieca_filmweb_20201003.csv 
 "duration_min","year","global_votes","global_rating","directors","countries","genres","timestamp","iso_date","user_vote","original_title","pl_title","link"
