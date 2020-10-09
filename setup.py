@@ -1,13 +1,12 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='filmweb',
     version='0.1',
     license='MIT',
     description='Export movie ratings from filmweb.pl',
     long_description=open('README.md').read(),
-    keywords=['filmweb'],
+    keywords=['filmweb', 'movie', 'crawler'],
     author='Piotr Patrzyk',
-    author_email='todo',
     url='https://github.com/ppatrzyk/filmweb-export',
     packages=['filmweb'],
     python_requires='~=3.7',
