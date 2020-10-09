@@ -11,6 +11,12 @@ Wymagania:
 Instalacja:
 
 ```
+pip install filmweb
+```
+
+Albo:
+
+```
 pip install https://github.com/ppatrzyk/filmweb-export/archive/master.zip
 ```
 
