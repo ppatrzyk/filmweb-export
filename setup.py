@@ -13,7 +13,7 @@ setup(name='filmweb',
     author='Piotr Patrzyk',
     url='https://github.com/ppatrzyk/filmweb-export',
     packages=['filmweb'],
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     install_requires=[
         'beautifulsoup4>=4.9.1',
         'docopt>=0.6.2',

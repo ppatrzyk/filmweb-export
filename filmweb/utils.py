@@ -163,14 +163,11 @@ def get_movie_ratings(content):
         except:
             pass
         try:
-            film_data['link'] = (
-                'https://www.filmweb.pl'
-                film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
-            )
+            film_data['link'] = 'https://www.filmweb.pl' + film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
         except:
             pass
         try:
-            user_comment = None
+            user_comment = soup.find('div', attrs={'class': 'voteCommentText', 'data-id': str(movie_id)}).text.strip()
         except:
             user_comment = ''
         timestamp = movie.get('t')
