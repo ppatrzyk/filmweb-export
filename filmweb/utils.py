@@ -37,7 +37,7 @@ LISTS_MAPPING = {
 CSV_ROWS = (
     'timestamp',
     'iso_date',
-    'comment',
+    'user_comment',
     'user_vote',
     'global_rating',
     'global_votes',
@@ -192,6 +192,7 @@ def get_movie_ratings(content):
             'timestamp': timestamp,
             'iso_date': datetime.fromtimestamp(timestamp).isoformat(),
             'user_vote': movie.get('r'),
+            'user_comment': user_comment
         }
         movies.append(clean_movie)
     # necessary for multiprocessing pickle to work
