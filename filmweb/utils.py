@@ -182,17 +182,13 @@ def get_movie_ratings(content):
             film_data['link'] = 'https://www.filmweb.pl' + film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
         except:
             pass
-        try:
-            user_comment = soup.find('div', attrs={'class': 'voteCommentText', 'data-id': str(movie_id)}).text.strip()
-        except:
-            user_comment = ''
         timestamp = movie.get('t')
         clean_movie = {
             **film_data,
             'timestamp': timestamp,
             'iso_date': datetime.fromtimestamp(timestamp).isoformat(),
             'user_vote': movie.get('r'),
-            'user_comment': user_comment
+            'user_comment': movie.get('c'),
         }
         movies.append(clean_movie)
     # necessary for multiprocessing pickle to work
