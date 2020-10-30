@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='filmweb',
-    version='0.2',
+    version='0.3',
     license='MIT',
     description='Export movie ratings from filmweb.pl',
     long_description=long_description,
