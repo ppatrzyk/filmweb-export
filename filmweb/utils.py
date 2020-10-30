@@ -155,13 +155,13 @@ def get_movie_ratings(content):
                 data = tuple()
             film_data[key] = data
         try:
-            original_title = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__originalTitle'}).contents[0]
+            film_data['original_title'] = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__originalTitle'}).contents[0]
         except:
-            original_title = None
+            pass
         try:
-            pl_title = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
+            film_data['pl_title'] = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
         except:
-            pl_title = None
+            pass
         link = 'https://www.filmweb.pl' + film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
         timestamp = movie.get('t')
         clean_movie = {
@@ -169,8 +169,6 @@ def get_movie_ratings(content):
             'timestamp': timestamp,
             'iso_date': datetime.fromtimestamp(timestamp).isoformat(),
             'user_vote': movie.get('r'),
-            'original_title': original_title,
-            'pl_title': pl_title,
             'link': link,
         }
         movies.append(clean_movie)
