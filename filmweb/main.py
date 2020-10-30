@@ -15,7 +15,7 @@ import logging
 from math import ceil
 from copy import deepcopy
 import requests
-from multiprocessing import Pool
+import multiprocessing
 import tqdm
 from .utils import (
     get_movie_ratings,
@@ -27,7 +27,7 @@ from .utils import (
     write_data,
 )
 
-PARALLEL_PROC = 4
+PARALLEL_PROC = multiprocessing.cpu_count()
 MOVIES_PER_PAGE = 25
 
 def main():
@@ -42,7 +42,7 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     session = requests.session()
-    pool = Pool(processes=PARALLEL_PROC)
+    pool = multiprocessing.Pool(processes=PARALLEL_PROC)
     try:
         login(session, user, password)
         get_vote_count_kwargs = {
