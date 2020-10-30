@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='filmweb',
-    version='0.2',
+    version='0.3',
     license='MIT',
     description='Export movie ratings from filmweb.pl',
     long_description=long_description,
@@ -13,7 +13,7 @@ setup(name='filmweb',
     author='Piotr Patrzyk',
     url='https://github.com/ppatrzyk/filmweb-export',
     packages=['filmweb'],
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     install_requires=[
         'beautifulsoup4>=4.9.1',
         'docopt>=0.6.2',

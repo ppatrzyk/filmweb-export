@@ -34,6 +34,22 @@ LISTS_MAPPING = {
     'countries': 'filmPreview__info--countries',
     'genres': 'filmPreview__info--genres',
 }
+CSV_ROWS = (
+    'timestamp',
+    'iso_date',
+    'user_comment',
+    'user_vote',
+    'global_rating',
+    'global_votes',
+    'original_title',
+    'pl_title',
+    'directors',
+    'countries',
+    'genres',
+    'link',
+    'duration_min',
+    'year',
+)
 
 def login(session, user, password):
     """
@@ -155,23 +171,24 @@ def get_movie_ratings(content):
                 data = tuple()
             film_data[key] = data
         try:
-            original_title = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__originalTitle'}).contents[0]
+            film_data['original_title'] = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__originalTitle'}).contents[0]
         except:
-            original_title = None
+            pass
         try:
-            pl_title = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
+            film_data['pl_title'] = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
         except:
-            pl_title = None
-        link = 'https://www.filmweb.pl' + film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
+            pass
+        try:
+            film_data['link'] = 'https://www.filmweb.pl' + film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
+        except:
+            pass
         timestamp = movie.get('t')
         clean_movie = {
             **film_data,
             'timestamp': timestamp,
             'iso_date': datetime.fromtimestamp(timestamp).isoformat(),
             'user_vote': movie.get('r'),
-            'original_title': original_title,
-            'pl_title': pl_title,
-            'link': link,
+            'user_comment': movie.get('c'),
         }
         movies.append(clean_movie)
     # necessary for multiprocessing pickle to work
@@ -191,9 +208,8 @@ def write_data(movies, user, data_format='json'):
             out_file.write(json.dumps(movies_clean))
     elif data_format == 'csv':
         file_name = f'{user}_filmweb_{date}.csv'
-        field_names = tuple(movies_clean[0].keys())
         with open(file_name, 'w') as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=field_names, dialect='unix')
+            writer = csv.DictWriter(out_file, fieldnames=CSV_ROWS, dialect='unix')
             writer.writeheader()
             for movie in movies_clean:
                 writer.writerow(movie)
