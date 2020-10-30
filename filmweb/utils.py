@@ -34,6 +34,22 @@ LISTS_MAPPING = {
     'countries': 'filmPreview__info--countries',
     'genres': 'filmPreview__info--genres',
 }
+CSV_ROWS = (
+    'timestamp',
+    'iso_date',
+    'comment',
+    'user_vote',
+    'global_rating',
+    'global_votes',
+    'original_title',
+    'pl_title',
+    'directors',
+    'countries',
+    'genres',
+    'link',
+    'duration_min',
+    'year',
+)
 
 def login(session, user, password):
     """
@@ -195,9 +211,8 @@ def write_data(movies, user, data_format='json'):
             out_file.write(json.dumps(movies_clean))
     elif data_format == 'csv':
         file_name = f'{user}_filmweb_{date}.csv'
-        field_names = tuple(movies_clean[0].keys())
         with open(file_name, 'w') as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=field_names, dialect='unix')
+            writer = csv.DictWriter(out_file, fieldnames=CSV_ROWS, dialect='unix')
             writer.writeheader()
             for movie in movies_clean:
                 writer.writerow(movie)
