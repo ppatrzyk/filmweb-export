@@ -163,20 +163,22 @@ def get_movie_ratings(content):
         except:
             pass
         try:
+            film_data['link'] = (
+                'https://www.filmweb.pl'
+                film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
+            )
+        except:
+            pass
+        try:
             user_comment = None
         except:
             user_comment = ''
-        link = (
-            'https://www.filmweb.pl'
-            film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
-        )
         timestamp = movie.get('t')
         clean_movie = {
             **film_data,
             'timestamp': timestamp,
             'iso_date': datetime.fromtimestamp(timestamp).isoformat(),
             'user_vote': movie.get('r'),
-            'link': link,
         }
         movies.append(clean_movie)
     # necessary for multiprocessing pickle to work
