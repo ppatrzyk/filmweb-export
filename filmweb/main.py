@@ -5,7 +5,7 @@ Usage:
 
 Options:
     -h --help                     Show this screen
-    -f --format=<fileformat>      Output file format: csv (default) or json
+    -f --format=<fileformat>      Output file format: json (default), csv, all (writes both)
     -u --get_user=<username>      User whose ratings are fetched (default: user logging in)
     -d --debug                    Debug prints
 """
@@ -34,8 +34,8 @@ def main():
     args = docopt(__doc__)
     user = args['<username>']
     password = args['<password>']
-    file_format = (args['--format'] or 'csv').lower()
-    assert file_format in ('csv', 'json'), 'Supported file formats: csv, JSON'
+    file_format = (args['--format'] or 'json').lower()
+    assert file_format in ('all', 'csv', 'json'), 'Supported file formats: all, csv, JSON'
     get_user = args['--get_user'] or user
     if args['--debug']:
         logging.basicConfig(level=logging.DEBUG)
@@ -61,8 +61,7 @@ def main():
         logging.info('Parsing data...')
         movies = tuple(tqdm.tqdm(pool.imap_unordered(get_movie_ratings, raw_responses), total=pages))
         logout(session)
-        file_name = write_data(movies, get_user, file_format)
-        logging.info(f'{file_name} written!')
+        write_data(movies, get_user, file_format)
     except Exception as e:
         logging.error(f'Program error: {str(e)}')
     finally:

@@ -1,10 +1,10 @@
 from setuptools import setup
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 setup(name='filmweb',
-    version='0.3',
+    version='0.4',
     license='MIT',
     description='Export movie ratings from filmweb.pl',
     long_description=long_description,

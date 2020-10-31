@@ -202,17 +202,21 @@ def write_data(movies, user, data_format='json'):
     date = datetime.now().strftime('%Y%m%d')
     movies_clean = itertools.chain.from_iterable((json.loads(el) for el in movies))
     movies_clean = tuple(movies_clean)
-    if data_format == 'json':
+    if data_format == 'all':
+        file_formats = ('csv', 'json')
+    else:
+        file_formats = (data_format, )
+    if 'json' in file_formats:
         file_name = f'{user}_filmweb_{date}.json'
-        with open(file_name, 'w') as out_file:
+        with open(file_name, 'w', encoding='utf-8') as out_file:
             out_file.write(json.dumps(movies_clean))
-    elif data_format == 'csv':
+        logging.info(f'{file_name} written!')
+    if 'csv' in file_formats:
         file_name = f'{user}_filmweb_{date}.csv'
-        with open(file_name, 'w') as out_file:
+        with open(file_name, 'w', encoding='utf-8') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=CSV_ROWS, dialect='unix')
             writer.writeheader()
             for movie in movies_clean:
                 writer.writerow(movie)
-    else:
-        raise ValueError(f'unsupported format {data_format}')
+        logging.info(f'{file_name} written!')
     return file_name
