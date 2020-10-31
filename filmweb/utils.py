@@ -217,6 +217,4 @@ def write_data(movies, user, data_format='json'):
             writer.writeheader()
             for movie in movies_clean:
                 writer.writerow(movie)
-    else:
-        raise ValueError(f'unsupported format {data_format}')
     return file_name
