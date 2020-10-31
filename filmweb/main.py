@@ -5,7 +5,7 @@ Usage:
 
 Options:
     -h --help                     Show this screen
-    -f --format=<fileformat>      Output file format: csv (default) or json
+    -f --format=<fileformat>      Output file format: json (default), csv, all (writes both)
     -u --get_user=<username>      User whose ratings are fetched (default: user logging in)
     -d --debug                    Debug prints
 """
@@ -35,7 +35,7 @@ def main():
     user = args['<username>']
     password = args['<password>']
     file_format = (args['--format'] or 'csv').lower()
-    assert file_format in ('csv', 'json'), 'Supported file formats: csv, JSON'
+    assert file_format in ('all', 'csv', 'json'), 'Supported file formats: all, csv, JSON'
     get_user = args['--get_user'] or user
     if args['--debug']:
         logging.basicConfig(level=logging.DEBUG)
