@@ -208,11 +208,11 @@ def write_data(movies, user, data_format='json'):
         file_formats = (data_format, )
     if 'json' in file_formats:
         file_name = f'{user}_filmweb_{date}.json'
-        with open(file_name, 'w') as out_file:
+        with open(file_name, 'w', encoding='utf-8') as out_file:
             out_file.write(json.dumps(movies_clean))
     if 'csv' in file_formats:
         file_name = f'{user}_filmweb_{date}.csv'
-        with open(file_name, 'w') as out_file:
+        with open(file_name, 'w', encoding='utf-8') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=CSV_ROWS, dialect='unix')
             writer.writeheader()
             for movie in movies_clean:
