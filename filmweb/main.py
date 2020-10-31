@@ -61,8 +61,7 @@ def main():
         logging.info('Parsing data...')
         movies = tuple(tqdm.tqdm(pool.imap_unordered(get_movie_ratings, raw_responses), total=pages))
         logout(session)
-        file_name = write_data(movies, get_user, file_format)
-        logging.info(f'{file_name} written!')
+        write_data(movies, get_user, file_format)
     except Exception as e:
         logging.error(f'Program error: {str(e)}')
     finally:
