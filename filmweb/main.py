@@ -34,7 +34,7 @@ def main():
     args = docopt(__doc__)
     user = args['<username>']
     password = args['<password>']
-    file_format = (args['--format'] or 'csv').lower()
+    file_format = (args['--format'] or 'json').lower()
     assert file_format in ('all', 'csv', 'json'), 'Supported file formats: all, csv, JSON'
     get_user = args['--get_user'] or user
     if args['--debug']:
