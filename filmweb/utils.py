@@ -74,7 +74,7 @@ def login(session, user, password):
     logging.debug(f'Login done, reached: {response.url}')
     response.raise_for_status()
     # https://www.filmweb.pl/login?error=bad.credentials IF FAIL
-    assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
+    assert not bool(re.search('login.*error', response.url)), 'Login failed'
     return True
 
 def logout(session):
