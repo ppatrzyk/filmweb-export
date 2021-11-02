@@ -22,6 +22,8 @@ HEADERS = {
 LOGIN_POST_DATA = {
     'login_redirect_url': 'https://ssl.filmweb.pl/',
     '_prm': 'true',
+    # TODO fake, must get valid token
+    'g-recaptcha-response': 'aaa'
 }
 ATTRS_MAPPING = {
     'global_votes': 'data-count',
