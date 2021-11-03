@@ -30,6 +30,7 @@ def main():
     args = docopt(__doc__)
     user = args['<username>']
     cookie = args['<cookie>']
+    assert all([user, cookie]), 'Empty arguments provided'
     file_format = (args['--format'] or 'json').lower()
     assert file_format in ('all', 'csv', 'json'), 'Supported file formats: all, csv, JSON'
     if args['--debug']:
