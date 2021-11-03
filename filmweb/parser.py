@@ -1,3 +1,4 @@
+from os import access
 import re
 import csv
 import itertools
@@ -60,9 +61,13 @@ def auth_check(content):
     Args:
         content: raw html
     """
+    access_error = """
+    Ratings for this user cannot be accessed.
+    Either auth cookie is incorrect or this user is not your friend
+    """
     soup = BeautifulSoup(content, 'html.parser')
     no_rating_access = soup.find('div', attrs={'class': 'userVotesPage__limitedView'})
-    assert not no_rating_access, 'Ratings for this user cannot be accessed'
+    assert not no_rating_access, access_error
     return True
 
 def extract_movie_ratings(content):
