@@ -18,7 +18,7 @@ HEADERS = {
     'Upgrade-Insecure-Requests': '1',
 }
 
-def get_page(args):
+def get_films_page(args):
     """
     request films page
     """
@@ -30,7 +30,7 @@ def get_page(args):
     response.raise_for_status()
     return response.text
 
-def get_page_count(cookie, user):
+def get_profile_page(cookie, user):
     """
     Parse films page to extract total count of votes
     Args:
