@@ -16,11 +16,13 @@ from math import ceil
 from copy import deepcopy
 import multiprocessing
 import tqdm
-from .utils import (
-    get_movie_ratings,
+from .getter import (
     get_page,
     get_vote_count,
     get_user_id,
+)
+from .parser import (
+    extract_movie_ratings,
     write_data,
 )
 
@@ -56,7 +58,7 @@ def main():
         logging.info('Fetching data...')
         raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_page, get_page_args), total=pages))
         logging.info('Parsing data...')
-        movies = tuple(tqdm.tqdm(pool.imap_unordered(get_movie_ratings, raw_responses), total=pages))
+        movies = tuple(tqdm.tqdm(pool.imap_unordered(extract_movie_ratings, raw_responses), total=pages))
         write_data(movies, get_user, file_format)
     except Exception as e:
         logging.error(f'Program error: {str(e)}')

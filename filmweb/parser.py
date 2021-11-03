@@ -33,7 +33,7 @@ CSV_ROWS = (
     'year',
 )
 
-def get_movie_ratings(content):
+def extract_movie_ratings(content):
     """
     Parse films page to extract movie ratings
     Args:
