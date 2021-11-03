@@ -1,3 +1,4 @@
+import re
 import csv
 import itertools
 import logging
@@ -42,8 +43,6 @@ def get_pages_count(content):
         content: raw html
     """
     soup = BeautifulSoup(content, 'html.parser')
-    # TODO some check here if ratings can be accessed for this user
-    # cookie validity - no auth vs no friend
     try:
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
@@ -54,6 +53,19 @@ def get_pages_count(content):
     assert ratings > 0, 'no rating data available'
     pages = ceil(ratings/MOVIES_PER_PAGE)
     return pages
+
+def auth_check(content):
+    """
+    Parse films page to check authorization
+    Args:
+        content: raw html
+    """
+    soup = BeautifulSoup(content, 'html.parser')
+    no_login = soup.find('a', attrs={'id': 'main-header_login-link'})
+    assert not no_login, 'User not authenticated'
+    no_rating_access = soup.find('div', attrs={'class': 'userVotesPage__limitedView'})
+    assert not no_rating_access, 'Ratings for this user cannot be accessed'
+    return True
 
 def extract_movie_ratings(content):
     """
