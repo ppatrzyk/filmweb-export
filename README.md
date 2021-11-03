@@ -1,5 +1,8 @@
 # filmweb-export
 
+**TODO**
+branch z niedziałającym loginem przez requests, problem z captcha: https://github.com/ppatrzyk/filmweb-export/issues/4
+
 Export ocen z serwisu [Filmweb](https://www.filmweb.pl).
 
 ## Instalacja
