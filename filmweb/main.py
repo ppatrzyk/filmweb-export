@@ -14,7 +14,6 @@ from docopt import docopt
 import logging
 from math import ceil
 from copy import deepcopy
-import requests
 import multiprocessing
 import tqdm
 from .utils import (
@@ -39,20 +38,21 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
-    session = requests.session()
+    # TODO get this from args
+    cookie = None
     pool = multiprocessing.Pool(processes=PARALLEL_PROC)
     try:
         get_vote_count_kwargs = {
-            'session': session,
+            'cookie': cookie,
             'user': get_user,
             'friend_check': None
         }
         if user != get_user:
-            user_id = get_user_id(session, user)
+            user_id = get_user_id(cookie, user)
             get_vote_count_kwargs['friend_check'] = user_id
         votes = get_vote_count(**get_vote_count_kwargs)
         pages = ceil(votes/MOVIES_PER_PAGE)
-        get_page_args = ((deepcopy(session), get_user, page) for page in range(1, pages+1))
+        get_page_args = ((cookie, get_user, page) for page in range(1, pages+1))
         logging.info('Fetching data...')
         raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_page, get_page_args), total=pages))
         logging.info('Parsing data...')
@@ -62,8 +62,6 @@ def main():
         logging.error(f'Program error: {str(e)}')
     finally:
         pool.close()
-        session.cookies.clear()
-        session.close()
 
 if __name__ == "__main__":
     main()

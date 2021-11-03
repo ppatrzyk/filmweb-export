@@ -3,6 +3,7 @@ import csv
 import json
 import logging
 import itertools
+import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -45,12 +46,12 @@ CSV_ROWS = (
     'year',
 )
 
-def get_user_id(session, user):
+def get_user_id(cookie, user):
     """
     Gets user id (necessary for friendship check)
     """
     url = f'https://www.filmweb.pl/user/{user}'
-    response = session.get(url, headers=HEADERS)
+    response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
     response.raise_for_status()
     logging.debug(f'Id check, reached {response.url}')
     assert response.url == url, f'User {user} does not exist'
@@ -63,24 +64,24 @@ def get_page(args):
     request films page
     """
     # this workaround is necessary because multiprocessing imap takes one arg only
-    (session, user, n) = args
+    (cookie, user, n) = args
     url = f'https://www.filmweb.pl/user/{user}/films'
     params = {'page': n}
-    response = session.get(url, params=params, headers=HEADERS)
+    response = requests.get(url, params=params, headers={'Cookie': cookie, **HEADERS})
     response.raise_for_status()
     return response.text
 
-def get_vote_count(session, user, friend_check=None):
+def get_vote_count(cookie, user, friend_check=None):
     """
     Parse films page to extract total count of votes
     Args:
-        session: requests session
+        cookie: auth cookie taken from browser
         user: user to get ratings for
         friend_check: None when getting for logging in
             otherwise need to check if the user has us in friends 
     """
     url = f'https://www.filmweb.pl/user/{user}'
-    response = session.get(url, headers=HEADERS)
+    response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
     try:
         response.raise_for_status()
     except Exception as e:
