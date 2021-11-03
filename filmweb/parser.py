@@ -3,8 +3,10 @@ import itertools
 import logging
 import json
 from datetime import datetime
+from math import ceil
 from bs4 import BeautifulSoup
 
+MOVIES_PER_PAGE = 25
 ATTRS_MAPPING = {
     'global_votes': 'data-count',
     'global_rating': 'data-rate',
@@ -32,6 +34,26 @@ CSV_ROWS = (
     'duration_min',
     'year',
 )
+
+def get_pages_count(content):
+    """
+    Parse profile page to extract pages count
+    Args:
+        content: raw html
+    """
+    soup = BeautifulSoup(content, 'html.parser')
+    # TODO some check here if ratings can be accessed for this user
+    # cookie validity - no auth vs no friend
+    try:
+        # TODO? future: other types than films are counted here as well 
+        user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
+        user_info = json.loads(user_info_container.text)
+        ratings = int(user_info.get('votes').get('films'))
+    except Exception as e:
+        raise ValueError(f'No ratings count found on website: {str(e)}')
+    assert ratings > 0, 'no rating data available'
+    pages = ceil(ratings/MOVIES_PER_PAGE)
+    return pages
 
 def extract_movie_ratings(content):
     """

@@ -1,11 +1,6 @@
-import re
-import json
 import logging
 import requests
-from math import ceil
-from bs4 import BeautifulSoup
 
-MOVIES_PER_PAGE = 25
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0',
     'Host': 'www.filmweb.pl',
@@ -30,29 +25,16 @@ def get_films_page(args):
     response.raise_for_status()
     return response.text
 
-def get_profile_page(cookie, user):
+def get_profile_page(user):
     """
     Parse films page to extract total count of votes
     Args:
-        cookie: auth cookie taken from browser
         user: user to get ratings for
     """
     url = f'https://www.filmweb.pl/user/{user}'
-    response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
+    response = requests.get(url, headers=HEADERS)
     try:
         response.raise_for_status()
     except Exception as e:
         raise ValueError(f'No user {user} found: {str(e)}')
-    soup = BeautifulSoup(response.text, 'html.parser')
-    # TODO some check here if ratings can be accessed for this user
-    # cookie validity - no auth vs no friend
-    try:
-        # TODO? future: other types than films are counted here as well 
-        user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
-        user_info = json.loads(user_info_container.text)
-        ratings = int(user_info.get('votes').get('films'))
-    except Exception as e:
-        raise ValueError(f'No ratings count found on website: {str(e)}')
-    assert ratings > 0, 'no rating data available'
-    pages = ceil(ratings/MOVIES_PER_PAGE)
-    return pages
+    return response.text

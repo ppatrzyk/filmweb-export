@@ -19,6 +19,7 @@ from .getter import (
 )
 from .parser import (
     extract_movie_ratings,
+    get_pages_count,
     write_data,
 )
 
@@ -36,11 +37,7 @@ def main():
         logging.basicConfig(level=logging.INFO)
     pool = multiprocessing.Pool(processes=PARALLEL_PROC)
     try:
-        get_profile_page_kwargs = {
-            'cookie': cookie,
-            'user': user,
-        }
-        pages = get_profile_page(**get_profile_page_kwargs)
+        pages = get_pages_count(get_profile_page(user))
         get_films_page_args = ((cookie, user, page) for page in range(1, pages+1))
         logging.info('Fetching data...')
         raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_films_page, get_films_page_args), total=pages))
