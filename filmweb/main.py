@@ -17,7 +17,6 @@ import tqdm
 from .getter import (
     get_page,
     get_vote_count,
-    get_user_id,
 )
 from .parser import (
     extract_movie_ratings,

@@ -16,19 +16,6 @@ HEADERS = {
     'Upgrade-Insecure-Requests': '1',
 }
 
-def get_user_id(cookie, user):
-    """
-    Gets user id (necessary for friendship check)
-    """
-    url = f'https://www.filmweb.pl/user/{user}'
-    response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
-    response.raise_for_status()
-    logging.debug(f'Id check, reached {response.url}')
-    assert response.url == url, f'User {user} does not exist'
-    soup = BeautifulSoup(response.text, 'html.parser')
-    user_id = soup.find('div', attrs={'class': 'userPreview'})['data-id']
-    return user_id
-
 def get_page(args):
     """
     request films page
