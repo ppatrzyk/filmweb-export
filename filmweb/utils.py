@@ -19,12 +19,6 @@ HEADERS = {
     'Connection': 'keep-alive',
     'Upgrade-Insecure-Requests': '1',
 }
-LOGIN_POST_DATA = {
-    'login_redirect_url': 'https://ssl.filmweb.pl/',
-    '_prm': 'true',
-    # TODO fake, must get valid token
-    'g-recaptcha-response': 'aaa'
-}
 ATTRS_MAPPING = {
     'global_votes': 'data-count',
     'global_rating': 'data-rate',
@@ -52,39 +46,6 @@ CSV_ROWS = (
     'duration_min',
     'year',
 )
-
-def login(session, user, password):
-    """
-    Login
-    """
-    params = {
-        'j_username': user,
-        'j_password': password,
-        **LOGIN_POST_DATA
-    }
-    post_headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Referer': 'https://www.filmweb.pl/login',
-        'Cookie': f'canProfile=true_{int(time.time())}',
-        **HEADERS
-    }
-    response = session.post(
-        url='https://www.filmweb.pl/j_login',
-        data=urllib.parse.urlencode(params),
-        headers=post_headers,
-    )
-    logging.debug(f'Login done, reached: {response.url}')
-    response.raise_for_status()
-    # https://www.filmweb.pl/login?error=bad.credentials IF FAIL
-    assert not bool(re.search('login.*error', response.url)), 'Login failed'
-    return True
-
-def logout(session):
-    """
-    Logout user
-    """
-    session.get('https://www.filmweb.pl/logout', headers=HEADERS)
-    return True
 
 def get_user_id(session, user):
     """

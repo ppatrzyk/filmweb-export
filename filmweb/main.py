@@ -44,7 +44,6 @@ def main():
     session = requests.session()
     pool = multiprocessing.Pool(processes=PARALLEL_PROC)
     try:
-        login(session, user, password)
         get_vote_count_kwargs = {
             'session': session,
             'user': get_user,
@@ -60,7 +59,6 @@ def main():
         raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_page, get_page_args), total=pages))
         logging.info('Parsing data...')
         movies = tuple(tqdm.tqdm(pool.imap_unordered(get_movie_ratings, raw_responses), total=pages))
-        logout(session)
         write_data(movies, get_user, file_format)
     except Exception as e:
         logging.error(f'Program error: {str(e)}')
