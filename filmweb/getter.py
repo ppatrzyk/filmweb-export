@@ -41,14 +41,12 @@ def get_page(args):
     response.raise_for_status()
     return response.text
 
-def get_vote_count(cookie, user, friend_check=None):
+def get_vote_count(cookie, user):
     """
     Parse films page to extract total count of votes
     Args:
         cookie: auth cookie taken from browser
         user: user to get ratings for
-        friend_check: None when getting for logging in
-            otherwise need to check if the user has us in friends 
     """
     url = f'https://www.filmweb.pl/user/{user}'
     response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
@@ -57,12 +55,8 @@ def get_vote_count(cookie, user, friend_check=None):
     except Exception as e:
         raise ValueError(f'No user {user} found: {str(e)}')
     soup = BeautifulSoup(response.text, 'html.parser')
-    if friend_check:
-        try:
-            friends_ids = soup.find('div', attrs={'class': 'userPreview'})['data-friends-ids']
-        except Exception as e:
-            raise ValueError(f'User {user} has no friends: {str(e)}')
-        assert bool(re.search(friend_check, friends_ids)), f'No access, user {user} is not a friend'
+    # TODO some check here if ratings can be accessed for this user
+    # cookie validity - no auth vs no friend
     try:
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
