@@ -1,0 +1,75 @@
+import re
+import json
+import logging
+import requests
+from bs4 import BeautifulSoup
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0',
+    'Host': 'www.filmweb.pl',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Origin': 'https://www.filmweb.pl',
+    'DNT': '1',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+}
+
+def get_user_id(cookie, user):
+    """
+    Gets user id (necessary for friendship check)
+    """
+    url = f'https://www.filmweb.pl/user/{user}'
+    response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
+    response.raise_for_status()
+    logging.debug(f'Id check, reached {response.url}')
+    assert response.url == url, f'User {user} does not exist'
+    soup = BeautifulSoup(response.text, 'html.parser')
+    user_id = soup.find('div', attrs={'class': 'userPreview'})['data-id']
+    return user_id
+
+def get_page(args):
+    """
+    request films page
+    """
+    # this workaround is necessary because multiprocessing imap takes one arg only
+    (cookie, user, n) = args
+    url = f'https://www.filmweb.pl/user/{user}/films'
+    params = {'page': n}
+    response = requests.get(url, params=params, headers={'Cookie': cookie, **HEADERS})
+    response.raise_for_status()
+    return response.text
+
+def get_vote_count(cookie, user, friend_check=None):
+    """
+    Parse films page to extract total count of votes
+    Args:
+        cookie: auth cookie taken from browser
+        user: user to get ratings for
+        friend_check: None when getting for logging in
+            otherwise need to check if the user has us in friends 
+    """
+    url = f'https://www.filmweb.pl/user/{user}'
+    response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        raise ValueError(f'No user {user} found: {str(e)}')
+    soup = BeautifulSoup(response.text, 'html.parser')
+    if friend_check:
+        try:
+            friends_ids = soup.find('div', attrs={'class': 'userPreview'})['data-friends-ids']
+        except Exception as e:
+            raise ValueError(f'User {user} has no friends: {str(e)}')
+        assert bool(re.search(friend_check, friends_ids)), f'No access, user {user} is not a friend'
+    try:
+        # TODO? future: other types than films are counted here as well 
+        user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
+        user_info = json.loads(user_info_container.text)
+        ratings = user_info.get('votes').get('films')
+    except Exception as e:
+        raise ValueError(f'No ratings count found on website: {str(e)}')
+    ratings = int(ratings)
+    assert ratings > 0, 'no rating data available'
+    return ratings
