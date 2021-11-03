@@ -61,8 +61,6 @@ def auth_check(content):
         content: raw html
     """
     soup = BeautifulSoup(content, 'html.parser')
-    no_login = soup.find('a', attrs={'id': 'main-header_login-link'})
-    assert not no_login, 'User not authenticated'
     no_rating_access = soup.find('div', attrs={'class': 'userVotesPage__limitedView'})
     assert not no_rating_access, 'Ratings for this user cannot be accessed'
     return True
