@@ -11,12 +11,11 @@ Options:
 
 from docopt import docopt
 import logging
-from math import ceil
 import multiprocessing
 import tqdm
 from .getter import (
     get_page,
-    get_vote_count,
+    get_page_count,
 )
 from .parser import (
     extract_movie_ratings,
@@ -24,7 +23,6 @@ from .parser import (
 )
 
 PARALLEL_PROC = multiprocessing.cpu_count()
-MOVIES_PER_PAGE = 25
 
 def main():
     args = docopt(__doc__)
@@ -38,12 +36,11 @@ def main():
         logging.basicConfig(level=logging.INFO)
     pool = multiprocessing.Pool(processes=PARALLEL_PROC)
     try:
-        get_vote_count_kwargs = {
+        get_page_count_kwargs = {
             'cookie': cookie,
             'user': user,
         }
-        votes = get_vote_count(**get_vote_count_kwargs)
-        pages = ceil(votes/MOVIES_PER_PAGE)
+        pages = get_page_count(**get_page_count_kwargs)
         get_page_args = ((cookie, user, page) for page in range(1, pages+1))
         logging.info('Fetching data...')
         raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_page, get_page_args), total=pages))

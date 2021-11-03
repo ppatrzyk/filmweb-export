@@ -2,8 +2,10 @@ import re
 import json
 import logging
 import requests
+from math import ceil
 from bs4 import BeautifulSoup
 
+MOVIES_PER_PAGE = 25
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0',
     'Host': 'www.filmweb.pl',
@@ -28,7 +30,7 @@ def get_page(args):
     response.raise_for_status()
     return response.text
 
-def get_vote_count(cookie, user):
+def get_page_count(cookie, user):
     """
     Parse films page to extract total count of votes
     Args:
@@ -48,9 +50,9 @@ def get_vote_count(cookie, user):
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
         user_info = json.loads(user_info_container.text)
-        ratings = user_info.get('votes').get('films')
+        ratings = int(user_info.get('votes').get('films'))
     except Exception as e:
         raise ValueError(f'No ratings count found on website: {str(e)}')
-    ratings = int(ratings)
     assert ratings > 0, 'no rating data available'
-    return ratings
+    pages = ceil(ratings/MOVIES_PER_PAGE)
+    return pages
