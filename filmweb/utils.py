@@ -1,10 +1,8 @@
 import re
-import time
 import csv
 import json
 import logging
 import itertools
-import urllib.parse
 from bs4 import BeautifulSoup
 from datetime import datetime
 

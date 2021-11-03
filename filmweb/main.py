@@ -22,8 +22,6 @@ from .utils import (
     get_page,
     get_vote_count,
     get_user_id,
-    login,
-    logout,
     write_data,
 )
 
