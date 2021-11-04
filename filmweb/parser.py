@@ -1,28 +1,13 @@
 import re
-import time
 import csv
-import json
-import logging
 import itertools
-import urllib.parse
-from bs4 import BeautifulSoup
+import logging
+import json
 from datetime import datetime
+from math import ceil
+from bs4 import BeautifulSoup
 
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0',
-    'Host': 'www.filmweb.pl',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    'Accept-Language': 'en-US,en;q=0.5',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Origin': 'https://www.filmweb.pl',
-    'DNT': '1',
-    'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1',
-}
-LOGIN_POST_DATA = {
-    'login_redirect_url': 'https://ssl.filmweb.pl/',
-    '_prm': 'true',
-}
+MOVIES_PER_PAGE = 25
 ATTRS_MAPPING = {
     'global_votes': 'data-count',
     'global_rating': 'data-rate',
@@ -51,98 +36,40 @@ CSV_ROWS = (
     'year',
 )
 
-def login(session, user, password):
+def get_pages_count(content):
     """
-    Login
-    """
-    params = {
-        'j_username': user,
-        'j_password': password,
-        **LOGIN_POST_DATA
-    }
-    post_headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Referer': 'https://www.filmweb.pl/login',
-        'Cookie': f'canProfile=true_{int(time.time())}',
-        **HEADERS
-    }
-    response = session.post(
-        url='https://www.filmweb.pl/j_login',
-        data=urllib.parse.urlencode(params),
-        headers=post_headers,
-    )
-    logging.debug(f'Login done, reached: {response.url}')
-    response.raise_for_status()
-    # https://www.filmweb.pl/login?error=bad.credentials IF FAIL
-    assert not bool(re.search('login.*credentials', response.url)), 'Bad credentials'
-    return True
-
-def logout(session):
-    """
-    Logout user
-    """
-    session.get('https://www.filmweb.pl/logout', headers=HEADERS)
-    return True
-
-def get_user_id(session, user):
-    """
-    Gets user id (necessary for friendship check)
-    """
-    url = f'https://www.filmweb.pl/user/{user}'
-    response = session.get(url, headers=HEADERS)
-    response.raise_for_status()
-    logging.debug(f'Id check, reached {response.url}')
-    assert response.url == url, f'User {user} does not exist'
-    soup = BeautifulSoup(response.text, 'html.parser')
-    user_id = soup.find('div', attrs={'class': 'userPreview'})['data-id']
-    return user_id
-
-def get_page(args):
-    """
-    request films page
-    """
-    # this workaround is necessary because multiprocessing imap takes one arg only
-    (session, user, n) = args
-    url = f'https://www.filmweb.pl/user/{user}/films'
-    params = {'page': n}
-    response = session.get(url, params=params, headers=HEADERS)
-    response.raise_for_status()
-    return response.text
-
-def get_vote_count(session, user, friend_check=None):
-    """
-    Parse films page to extract total count of votes
+    Parse profile page to extract pages count
     Args:
-        session: requests session
-        user: user to get ratings for
-        friend_check: None when getting for logging in
-            otherwise need to check if the user has us in friends 
+        content: raw html
     """
-    url = f'https://www.filmweb.pl/user/{user}'
-    response = session.get(url, headers=HEADERS)
-    try:
-        response.raise_for_status()
-    except Exception as e:
-        raise ValueError(f'No user {user} found: {str(e)}')
-    soup = BeautifulSoup(response.text, 'html.parser')
-    if friend_check:
-        try:
-            friends_ids = soup.find('div', attrs={'class': 'userPreview'})['data-friends-ids']
-        except Exception as e:
-            raise ValueError(f'User {user} has no friends: {str(e)}')
-        assert bool(re.search(friend_check, friends_ids)), f'No access, user {user} is not a friend'
+    soup = BeautifulSoup(content, 'html.parser')
     try:
         # TODO? future: other types than films are counted here as well 
         user_info_container = soup.find('div', attrs={'class': 'voteStatsBoxData'})
         user_info = json.loads(user_info_container.text)
-        ratings = user_info.get('votes').get('films')
+        ratings = int(user_info.get('votes').get('films'))
     except Exception as e:
         raise ValueError(f'No ratings count found on website: {str(e)}')
-    ratings = int(ratings)
     assert ratings > 0, 'no rating data available'
-    return ratings
+    pages = ceil(ratings/MOVIES_PER_PAGE)
+    return pages
 
-def get_movie_ratings(content):
+def auth_check(content):
+    """
+    Parse films page to check authorization
+    Args:
+        content: raw html
+    """
+    access_error = """
+    Ratings for this user cannot be accessed.
+    Either auth cookie is incorrect or this user is not your friend
+    """
+    soup = BeautifulSoup(content, 'html.parser')
+    no_rating_access = soup.find('div', attrs={'class': 'userVotesPage__limitedView'})
+    assert not no_rating_access, access_error
+    return True
+
+def extract_movie_ratings(content):
     """
     Parse films page to extract movie ratings
     Args:
