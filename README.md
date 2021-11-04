@@ -22,10 +22,20 @@ pip install https://github.com/ppatrzyk/filmweb-export/archive/master.zip
 
 ## Instrukcja
 
-Filmweb wymaga zalogowania, aby uzyskać dostęp do wszystkich ocen. Istnieje możliwość eksportu własnych ocen, np.:
+Istnieje możliwość eksportu własnych ocen lub ocen znajomych - proszę podać nazwę użytkownika jako `username`. Do dostępu jest potrzebne zalogowanie się na portal i podanie do skryptu wartości `cookie` dla strony filmweb. Podstawowe użycie:
 
 ```
-$ filmweb <LOGIN> <HASŁO> --format csv
+filmweb <username> <cookie>
+```
+
+### Skąd wziąć cookie?
+
+todo
+
+### Przykład
+
+```
+$ filmweb -f csv pieca "canProfile=true_...tcKeywords="
 INFO:root:Fetching data...
 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 31/31 [00:06<00:00,  5.13it/s]
 INFO:root:Parsing data...
@@ -40,27 +50,19 @@ $ head -6 pieca_filmweb_20201031.csv
 "1579354699","2020-01-18T14:38:19","","5","7.180500030517578","4471","Dylda","Wysoka dziewczyna","['Kantemir Balagov']","['Rosja']","['Dramat']","https://www.filmweb.pl/film/Wysoka+dziewczyna-2019-829460","130","2019-10-11"
 ```
 
-lub ocen innego użytkownika (musi być znajomym logującego się):
-
-```
-$ filmweb <LOGIN> <HASŁO> -u <LOGIN_ZNAJOMEGO>
-(...)
-```
-
-Wszystkie opcje:
+### Wszystkie opcje
 
 ```
 $ filmweb -h
 filmweb
 
 Usage:
-    filmweb <username> <password> [--format=<fileformat>] [--get_user=<username>] [--debug]
+    filmweb [--format=<fileformat>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
-    -f --format=<fileformat>      Output file format: csv (default) or json
-    -u --get_user=<username>      User whose ratings are fetched (default: user logging in)
-    -d --debug                    Debug prints
+    -f --format=<fileformat>      Output file format: json (default), csv, all (writes both)
+    -d --debug                    Debug prints                 Debug prints
 ```
 
 ## Dostępne dane:
@@ -82,5 +84,4 @@ Options:
 
 ## Znane problemy:
 
-- Logowanie tylko kontem filmweb,
 - Eksport tylko ocen filmów, inne (np. seriale) niedostępne,
