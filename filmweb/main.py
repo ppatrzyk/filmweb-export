@@ -10,6 +10,7 @@ Options:
 """
 
 from docopt import docopt
+import re
 import logging
 import multiprocessing
 import tqdm
@@ -40,6 +41,7 @@ def main():
     pool = multiprocessing.Pool(processes=PARALLEL_PROC)
     try:
         logging.info('Checking args...')
+        cookie = re.sub('Cookie:', '', cookie).strip()
         pages = get_pages_count(get_profile_page(user))
         auth_check(get_films_page((cookie, user, 1)))
         logging.info('Fetching data...')
