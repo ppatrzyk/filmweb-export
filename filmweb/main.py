@@ -12,20 +12,21 @@ Options:
 from docopt import docopt
 import re
 import logging
+from math import ceil
 import multiprocessing
 import tqdm
 from .getter import (
+    auth_check,
     get_films_page,
-    get_profile_page,
+    get_votes_count,
 )
 from .parser import (
-    auth_check,
     extract_movie_ratings,
-    get_pages_count,
     write_data,
 )
 
 PARALLEL_PROC = multiprocessing.cpu_count()
+MOVIES_PER_PAGE = 25
 
 def main():
     args = docopt(__doc__)
@@ -42,9 +43,14 @@ def main():
     try:
         logging.info('Checking args...')
         cookie = re.sub('Cookie:', '', cookie).strip()
-        pages = get_pages_count(get_profile_page(user))
-        auth_check(get_films_page((cookie, user, 1)))
+        votes_total = get_votes_count(user)
+        pages = ceil(votes_total/MOVIES_PER_PAGE)
+        # get_films_page((cookie, user, 1))
+        auth_check(cookie)
         logging.info('Fetching data...')
+        # TODO 
+        # 1 fetch and parse htmls -> get all films list
+        # 2 query api for data about each film
         get_films_page_args = ((cookie, user, page) for page in range(1, pages+1))
         raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_films_page, get_films_page_args), total=pages))
         logging.info('Parsing data...')
