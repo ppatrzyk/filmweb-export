@@ -1,3 +1,4 @@
+import json
 import requests
 
 HEADERS = {
@@ -14,21 +15,6 @@ HEADERS = {
     'Upgrade-Insecure-Requests': '1',
 }
 
-def auth_check(cookie):
-    """
-    Check if auth is OK (valid cookie after login)
-    """
-    url = "https://www.filmweb.pl/api/v1/logged/info"
-    try:
-        response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
-        response.raise_for_status()
-        content = response.json()
-        user = content["name"]
-    except Exception as e:
-        raise ValueError(f'Auth failure: {str(e)}')
-    else:
-        return user
-
 def get_films_page(args):
     """
     request films page
@@ -41,6 +27,15 @@ def get_films_page(args):
     response.raise_for_status()
     return response.text
 
+def auth_check(cookie):
+    """
+    Check if auth is OK (valid cookie after login)
+    """
+    url = "https://www.filmweb.pl/api/v1/logged/info"
+    content = _get_json(url, cookie, "auth_check")
+    user = content["name"]
+    return user
+
 def get_votes_count(user):
     """
     Get total count of votes
@@ -48,14 +43,7 @@ def get_votes_count(user):
         user: user to get ratings for
     """
     url = f'https://www.filmweb.pl/api/v1/user/{user}/votes/film/count'
-    try:
-        response = requests.get(url, headers=HEADERS)
-        response.raise_for_status()
-        assert response.text, "Empty response for user vote count"
-        count = int(response.text)
-    except Exception as e:
-        raise ValueError(f'No user {user} found: {str(e)}')
-    return count
+    return _get_json(url, "", "get_votes_count")
 
 def get_user_rating(args):
     """
@@ -66,37 +54,38 @@ def get_user_rating(args):
         url = f"https://www.filmweb.pl/api/v1/logged/friend/{user}/vote/film/{movie_id}/details"
     else:
         url = f"https://www.filmweb.pl/api/v1/logged/vote/film/{movie_id}/details"
+    data = _get_json(url, cookie, "get_user_rating")
+    data["movie_id"] = movie_id
+    return json.dumps(data)
+
+def get_global_info(movie_id):
+    """
+    Get info about a movie (title etc)
+    """
+    url = f"https://www.filmweb.pl/api/v1/title/{movie_id}/info"
+    data = _get_json(url, "", "get_global_info")
+    data["movie_id"] = movie_id
+    return json.dumps(data)
+
+def get_global_rating(movie_id):
+    """
+    Get global rating for a movie
+    """
+    url = f"https://www.filmweb.pl/api/v1/film/{movie_id}/rating"
+    data = _get_json(url, "", "get_global_rating")
+    data["movie_id"] = movie_id
+    data["global_rate"] = data.pop("rate")
+    return json.dumps(data)
+
+def _get_json(url, cookie, func_name):
+    """
+    Wrapper for request and unified error
+    """
     try:
         response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
         response.raise_for_status()
         content = response.json()
     except Exception as e:
-        raise ValueError(f'Failure in get_user_rating: {str(e)}')
-    else:
-        return content
-
-def get_global_info(movie_id):
-    """
-    """
-    url = f"https://www.filmweb.pl/api/v1/title/{movie_id}/info"
-    try:
-        response = requests.get(url, headers=HEADERS)
-        response.raise_for_status()
-        content = response.json()
-    except Exception as e:
-        raise ValueError(f'Failure in get_global_info: {str(e)}')
-    else:
-        return content
-
-def get_global_rating(movie_id):
-    """
-    """
-    url = f"https://www.filmweb.pl/api/v1/title/{movie_id}/info"
-    try:
-        response = requests.get(url, headers=HEADERS)
-        response.raise_for_status()
-        content = response.json()
-    except Exception as e:
-        raise ValueError(f'Failure in get_global_rating: {str(e)}')
+        raise ValueError(f'Failure in {func_name}: {str(e)}')
     else:
         return content

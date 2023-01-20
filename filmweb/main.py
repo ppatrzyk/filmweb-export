@@ -17,8 +17,8 @@ import logging
 from math import ceil
 import multiprocessing
 import tqdm
-import getter
-import parser
+from . import getter
+from . import parser
 
 PARALLEL_PROC = multiprocessing.cpu_count()
 MOVIES_PER_PAGE = 25
@@ -51,16 +51,17 @@ def main():
         total_movies = len(ids)
         logging.info(f'User {user} has {total_movies} movies...')
         logging.info('Fetching movie details...')
-        logging.info('Fetching user ratings...')
+        logging.info('Fetching user ratings [1/3]...')
         get_user_rating_args = ((cookie, movie_id, user, friend_query) for movie_id in ids)
         user_ratings = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_user_rating, get_user_rating_args), total=total_movies))
         # TODO make these 2 optional?
-        logging.info('Fetching info about movies...')
+        logging.info('Fetching info about movies [2/3]...')
         global_info = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_global_info, ids), total=total_movies))
-        logging.info('Fetching global rating for movies...')
+        logging.info('Fetching global rating for movies [3/3]...')
         global_rating = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_global_rating, ids), total=total_movies))
-        # 2 query api for data about each film
-        # parser.write_data(movies, user, file_format)
+        movies = parser.merge_data(ids, user_ratings, global_info, global_rating)
+        logging.info('Writing data...')
+        parser.write_data(movies, user, file_format)
     except Exception as e:
         logging.error(f'Program error: {str(e)}')
     finally:
