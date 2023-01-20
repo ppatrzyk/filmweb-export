@@ -1,6 +1,4 @@
-import re
 import csv
-import itertools
 import logging
 import json
 from datetime import datetime
@@ -34,65 +32,24 @@ CSV_ROWS = (
     'year',
 )
 
-def extract_movie_ratings(content):
+def extract_movie_ids(content):
     """
-    Parse films page to extract movie ratings
+    Extract movie ids from films page
     Args:
         content: raw html
     """
     soup = BeautifulSoup(content, 'html.parser')
-    user_data_container = soup.find('span', attrs={'data-source': 'userVotes'})
-    raw_votes = tuple(json.loads(script.contents[0]) for script in user_data_container.find_all('script'))
-    movies = []
-    for movie in raw_votes:
-        movie_id = movie.get('eId')
-        film_info_container = soup.find('div', attrs={'id': f'filmPreview_{movie_id}'})
-        assert film_info_container, f'no container for {movie}'
-        film_data = {}
-        for el in film_info_container.find_all():
-            for key, data_attr in ATTRS_MAPPING.items():
-                try:
-                    film_data[key] = el[data_attr]
-                except:
-                    continue
-        for key, css_class in LISTS_MAPPING.items():
-            data_container = film_info_container.find(re.compile('.*'), attrs={'class': css_class})
-            try:
-                data = tuple(el.text for el in data_container.find_all('li'))
-            except:
-                data = tuple()
-            film_data[key] = data
-        try:
-            film_data['original_title'] = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__originalTitle'}).contents[0]
-        except:
-            pass
-        try:
-            film_data['pl_title'] = film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__title'}).contents[0]
-        except:
-            pass
-        try:
-            film_data['link'] = 'https://www.filmweb.pl' + film_info_container.find(re.compile('.*'), attrs={'class': 'filmPreview__link'})['href']
-        except:
-            pass
-        timestamp = movie.get('t')
-        clean_movie = {
-            **film_data,
-            'timestamp': timestamp,
-            'iso_date': datetime.fromtimestamp(timestamp).isoformat(),
-            'user_vote': movie.get('r'),
-            'user_comment': movie.get('c'),
-        }
-        movies.append(clean_movie)
+    id_containers = soup.find_all('div', attrs={'data-film-id': True})
+    ids = set(el['data-film-id'] for el in id_containers)
     # necessary for multiprocessing pickle to work
-    movies = json.dumps(movies)
-    return movies
+    return json.dumps(list(ids))
 
 def write_data(movies, user, data_format='json'):
     """
     """
     assert movies, 'no data to write'
     date = datetime.now().strftime('%Y%m%d')
-    movies_clean = itertools.chain.from_iterable((json.loads(el) for el in movies))
+    # movies_clean = itertools.chain.from_iterable((json.loads(el) for el in movies))
     movies_clean = tuple(movies_clean)
     if data_format == 'all':
         file_formats = ('csv', 'json')

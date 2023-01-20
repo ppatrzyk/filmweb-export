@@ -10,6 +10,8 @@ Options:
 """
 
 from docopt import docopt
+import itertools
+import json
 import re
 import logging
 from math import ceil
@@ -21,7 +23,7 @@ from .getter import (
     get_votes_count,
 )
 from .parser import (
-    extract_movie_ratings,
+    extract_movie_ids,
     write_data,
 )
 
@@ -47,15 +49,16 @@ def main():
         pages = ceil(votes_total/MOVIES_PER_PAGE)
         # get_films_page((cookie, user, 1))
         auth_check(cookie)
-        logging.info('Fetching data...')
-        # TODO 
-        # 1 fetch and parse htmls -> get all films list
-        # 2 query api for data about each film
+        logging.info('Fetching list of movies...')
         get_films_page_args = ((cookie, user, page) for page in range(1, pages+1))
         raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_films_page, get_films_page_args), total=pages))
-        logging.info('Parsing data...')
-        movies = tuple(tqdm.tqdm(pool.imap_unordered(extract_movie_ratings, raw_responses), total=pages))
-        write_data(movies, user, file_format)
+        logging.info('Parsing list of movies...')
+        ids = tuple(tqdm.tqdm(pool.imap_unordered(extract_movie_ids, raw_responses), total=pages))
+        ids = set(itertools.chain.from_iterable((json.loads(el) for el in ids)))
+        logging.info('Fetching movie details...')
+        # 2 query api for data about each film
+        print(len(ids))
+        # write_data(movies, user, file_format)
     except Exception as e:
         logging.error(f'Program error: {str(e)}')
     finally:
