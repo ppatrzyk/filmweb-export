@@ -19,12 +19,15 @@ def auth_check(cookie):
     Check if auth is OK (valid cookie after login)
     """
     url = "https://www.filmweb.pl/api/v1/logged/info"
-    response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
     try:
+        response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
         response.raise_for_status()
+        content = response.json()
+        user = content["name"]
     except Exception as e:
         raise ValueError(f'Auth failure: {str(e)}')
-    return True
+    else:
+        return user
 
 def get_films_page(args):
     """
@@ -45,8 +48,8 @@ def get_votes_count(user):
         user: user to get ratings for
     """
     url = f'https://www.filmweb.pl/api/v1/user/{user}/votes/film/count'
-    response = requests.get(url, headers=HEADERS)
     try:
+        response = requests.get(url, headers=HEADERS)
         response.raise_for_status()
         assert response.text, "Empty response for user vote count"
         count = int(response.text)
@@ -54,11 +57,46 @@ def get_votes_count(user):
         raise ValueError(f'No user {user} found: {str(e)}')
     return count
 
-# TODO
-# user rating
-# https://www.filmweb.pl/api/v1/logged/vote/film/4186/details
-# https://www.filmweb.pl/api/v1/logged/friend/kajka23/vote/film/1157/details
+def get_user_rating(args):
+    """
+    Gets user rating
+    """
+    (cookie, movie_id, user, friend_query) = args
+    if friend_query:
+        url = f"https://www.filmweb.pl/api/v1/logged/friend/{user}/vote/film/{movie_id}/details"
+    else:
+        url = f"https://www.filmweb.pl/api/v1/logged/vote/film/{movie_id}/details"
+    try:
+        response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
+        response.raise_for_status()
+        content = response.json()
+    except Exception as e:
+        raise ValueError(f'Failure in get_user_rating: {str(e)}')
+    else:
+        return content
 
-# global info, global rating
-# https://www.filmweb.pl/api/v1/title/876864/info
-# https://www.filmweb.pl/api/v1/film/108121/rating
+def get_global_info(movie_id):
+    """
+    """
+    url = f"https://www.filmweb.pl/api/v1/title/{movie_id}/info"
+    try:
+        response = requests.get(url, headers=HEADERS)
+        response.raise_for_status()
+        content = response.json()
+    except Exception as e:
+        raise ValueError(f'Failure in get_global_info: {str(e)}')
+    else:
+        return content
+
+def get_global_rating(movie_id):
+    """
+    """
+    url = f"https://www.filmweb.pl/api/v1/title/{movie_id}/info"
+    try:
+        response = requests.get(url, headers=HEADERS)
+        response.raise_for_status()
+        content = response.json()
+    except Exception as e:
+        raise ValueError(f'Failure in get_global_rating: {str(e)}')
+    else:
+        return content

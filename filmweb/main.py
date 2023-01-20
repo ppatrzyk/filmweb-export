@@ -17,15 +17,8 @@ import logging
 from math import ceil
 import multiprocessing
 import tqdm
-from .getter import (
-    auth_check,
-    get_films_page,
-    get_votes_count,
-)
-from .parser import (
-    extract_movie_ids,
-    write_data,
-)
+import getter
+import parser
 
 PARALLEL_PROC = multiprocessing.cpu_count()
 MOVIES_PER_PAGE = 25
@@ -45,20 +38,29 @@ def main():
     try:
         logging.info('Checking args...')
         cookie = re.sub('Cookie:', '', cookie).strip()
-        votes_total = get_votes_count(user)
+        votes_total = getter.get_votes_count(user)
         pages = ceil(votes_total/MOVIES_PER_PAGE)
-        # get_films_page((cookie, user, 1))
-        auth_check(cookie)
+        logged_in_user = getter.auth_check(cookie)
+        friend_query = (user != logged_in_user)
         logging.info('Fetching list of movies...')
         get_films_page_args = ((cookie, user, page) for page in range(1, pages+1))
-        raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(get_films_page, get_films_page_args), total=pages))
+        raw_responses = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_films_page, get_films_page_args), total=pages))
         logging.info('Parsing list of movies...')
-        ids = tuple(tqdm.tqdm(pool.imap_unordered(extract_movie_ids, raw_responses), total=pages))
-        ids = set(itertools.chain.from_iterable((json.loads(el) for el in ids)))
+        ids = tuple(tqdm.tqdm(pool.imap_unordered(parser.extract_movie_ids, raw_responses), total=pages))
+        ids = tuple(set(itertools.chain.from_iterable((json.loads(el) for el in ids))))
+        total_movies = len(ids)
+        logging.info(f'User {user} has {total_movies} movies...')
         logging.info('Fetching movie details...')
+        logging.info('Fetching user ratings...')
+        get_user_rating_args = ((cookie, movie_id, user, friend_query) for movie_id in ids)
+        user_ratings = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_user_rating, get_user_rating_args), total=total_movies))
+        # TODO make these 2 optional?
+        logging.info('Fetching info about movies...')
+        global_info = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_global_info, ids), total=total_movies))
+        logging.info('Fetching global rating for movies...')
+        global_rating = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_global_rating, ids), total=total_movies))
         # 2 query api for data about each film
-        print(len(ids))
-        # write_data(movies, user, file_format)
+        # parser.write_data(movies, user, file_format)
     except Exception as e:
         logging.error(f'Program error: {str(e)}')
     finally:
