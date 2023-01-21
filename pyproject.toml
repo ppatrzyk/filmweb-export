@@ -1,0 +1,33 @@
+[project]
+name = "filmweb"
+version = "0.6"
+description = "Export movie ratings from filmweb.pl"
+authors = [ {name = "Piotr Patrzyk"}, ]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["dependencies", ]
+keywords = ["filmweb", "movie", "crawler", "data"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet",
+]
+
+[project.urls]
+Source = "https://github.com/ppatrzyk/filmweb"
+
+[project.scripts]
+filmweb = "filmweb.main:main"
+
+[build-system]
+requires = ["setuptools", ]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["filmweb"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
