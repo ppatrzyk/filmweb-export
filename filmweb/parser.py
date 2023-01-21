@@ -3,17 +3,19 @@ import logging
 import json
 from datetime import datetime
 from bs4 import BeautifulSoup
+from urllib.parse import quote_plus
 
 KEY_MAPPING = {
     'timestamp': 'timestamp',
     'favorite': 'favorite',
     'rate': 'user_rating',
     'global_rate': 'global_rating',
-    'count': 'global_votes',
+    'count': 'global_rating_count',
     'originalTitle': 'original_title',
     'title': 'pl_title',
     'year': 'year',
     'movie_id': 'movie_id',
+    'url': 'url',
 }
 
 def extract_movie_ids(content):
@@ -47,7 +49,12 @@ def _rewrite_keys(entry):
     """
     Fix keys names for data
     """
-    return {new_key: entry.get(old_key) for old_key, new_key in KEY_MAPPING.items()}
+    fixed = {new_key: entry.get(old_key) for old_key, new_key in KEY_MAPPING.items()}
+    if fixed.get("original_title") is None:
+        fixed["original_title"] = fixed["pl_title"]
+    path = quote_plus(f"{fixed['pl_title'].strip()}-{fixed['year']}-{fixed['movie_id']}")
+    fixed["url"] = f"https://www.filmweb.pl/film/{path}"
+    return fixed
 
 def write_data(movies, user, data_format='json'):
     """

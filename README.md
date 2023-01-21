@@ -40,19 +40,43 @@ filmweb <username> <cookie>
 ### Przykład
 
 ```
-$ filmweb -f csv pieca "canProfile=true_...tcKeywords="
-INFO:root:Fetching data...
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 31/31 [00:06<00:00,  5.13it/s]
-INFO:root:Parsing data...
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 31/31 [00:06<00:00,  4.52it/s]
-INFO:root:pieca_filmweb_20201031.csv written!
-$ head -6 pieca_filmweb_20201031.csv
-"timestamp","iso_date","user_comment","user_vote","global_rating","global_votes","original_title","pl_title","directors","countries","genres","link","duration_min","year"
-"1580143639","2020-01-27T17:47:19","","3","7.2103400230407715","73632","What We Do in the Shadows","Co robimy w ukryciu","['Jemaine Clement']","['Nowa Zelandia', 'USA']","['Horror', 'Komedia', 'Dokumentalizowany']","https://www.filmweb.pl/film/Co+robimy+w+ukryciu-2014-707286","86","2015-02-27"
-"1580143596","2020-01-27T17:46:36","","1","7.762599945068359","76768","","Jojo Rabbit","['Taika Waititi']","['Czechy', 'Niemcy', 'Nowa Zelandia', 'USA']","['Dramat', 'Komedia', 'Wojenny']","https://www.filmweb.pl/film/Jojo+Rabbit-2019-817417","108","2020-01-24"
-"1580033558","2020-01-26T11:12:38","","6","6.284679889678955","966","Quick","Seryjny morderca","['Mikael Håfström']","['Szwecja']","['Thriller']","https://www.filmweb.pl/film/Seryjny+morderca-2019-832513","132","2020-09-03"
-"1579429860","2020-01-19T11:31:00","","7","6.661180019378662","425","","Difret","['Zeresenay Mehari']","['USA', 'Etiopia']","['Dramat']","https://www.filmweb.pl/film/Difret-2014-700409","99","2015-03-27"
-"1579354699","2020-01-18T14:38:19","","5","7.180500030517578","4471","Dylda","Wysoka dziewczyna","['Kantemir Balagov']","['Rosja']","['Dramat']","https://www.filmweb.pl/film/Wysoka+dziewczyna-2019-829460","130","2019-10-11"
+$ filmweb -f all pieca "didomi_token=(...)=="
+INFO:root:Checking args...
+INFO:root:Fetching list of movies...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 38/38 [00:06<00:00,  6.26it/s]
+INFO:root:Parsing list of movies...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 38/38 [00:02<00:00, 12.79it/s]
+INFO:root:User pieca has 926 movies...
+INFO:root:Fetching movie details...
+INFO:root:Fetching user ratings [1/3]...
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 926/926 [00:39<00:00, 23.49it/s]
+INFO:root:Fetching info about movies [2/3]...
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 926/926 [00:43<00:00, 21.22it/s]
+INFO:root:Fetching global rating for movies [3/3]...
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 926/926 [00:43<00:00, 21.36it/s]
+INFO:root:Writing data...
+INFO:root:pieca_filmweb_20230121.json written!
+INFO:root:pieca_filmweb_20230121.csv written!
+$ cat pieca_filmweb_20230121.json | jq .[0]
+{
+  "timestamp": 1657484863818,
+  "favorite": false,
+  "user_rating": 8,
+  "global_rating": 7.36859,
+  "global_rating_count": 1579,
+  "original_title": "Tehran Taboo",
+  "pl_title": "Teheran tabu",
+  "year": 2017,
+  "movie_id": "786978",
+  "url": "https://www.filmweb.pl/film/Teheran+tabu-2017-786978"
+}
+$ cat pieca_filmweb_20230121.csv | xsv sample 5 | xsv table
+timestamp      favorite  user_rating  global_rating  global_rating_count  original_title  pl_title       year  movie_id  url
+1464302814850  False     4            6.91279        1743                 Pupendo         Pupendo        2003  103930    https://www.filmweb.pl/film/Pupendo-2003-103930
+1581177494926  False     7            6.51905        210                  Dukhtar         Dukhtar        2014  727743    https://www.filmweb.pl/film/Dukhtar-2014-727743
+1601716769499  False     8            7.59777        179                  Shah-re ziba    Piękne miasto  2004  155344    https://www.filmweb.pl/film/Pi%C4%99kne+miasto-2004-155344
+1548505975360  False     8            7.12276        1784                 Geu-mul         W sieci        2016  766555    https://www.filmweb.pl/film/W+sieci-2016-766555
+1638616845248  False     5            6.59127        115166               Ida             Ida            2013  546529    https://www.filmweb.pl/film/Ida-2013-546529
 ```
 
 ### Wszystkie opcje
@@ -72,20 +96,18 @@ Options:
 
 ## Dostępne dane:
 
-- duration_min: _długość w min_
-- year: _premiera_
-- global_votes: _ilość ocen filmu_
-- global_rating: _ocena filmweb_
-- directors: _reżyserzy (lista)_
-- countries: _kraje (lista)_
-- genres: _gatunki (lista)_
-- timestamp: _[czas oceny (unix)](https://pl.wikipedia.org/wiki/Czas_uniksowy)_
-- iso_date: _[czas oceny (ISO)](https://pl.wikipedia.org/wiki/ISO_8601)_
-- user_vote: _ocena użytkownika_
-- user_comment: _komentarz użytkownika_
-- original_title: _tytuł oryginalny_
-- pl_title: _tytuł polski_
-- link: _strona filmu_
+Kolumna | Opis
+--- | ---
+year | _premiera_
+global\_rating\_count | _ilość ocen filmu_
+global\_rating | _ocena filmweb_
+timestamp | _[czas oceny (unix)](https://pl.wikipedia.org/wiki/Czas_uniksowy)_
+user\_rating | _ocena użytkownika_
+favorite | _dodany do ulubionych_
+original\_title | _tytuł oryginalny_
+pl\_title | _tytuł polski_
+movie\_id | _id filmu_
+url | _strona filmu_
 
 ## Znane problemy:
 
