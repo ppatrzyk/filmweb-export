@@ -3,16 +3,16 @@ import requests
 
 HEADERS = {
     # https://www.whatismybrowser.com/guides/the-latest-user-agent/firefox
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 13.1; rv:109.0) Gecko/20100101 Firefox/109.0',
-    'x-locale': 'pl_PL',
-    'Host': 'www.filmweb.pl',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    'Accept-Language': 'en-US,en;q=0.5',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Origin': 'https://www.filmweb.pl',
-    'DNT': '1',
-    'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1',
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13.4; rv:109.0) Gecko/20100101 Firefox/113.0",
+    "x-locale": "pl_PL",
+    "Host": "www.filmweb.pl",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Origin": "https://www.filmweb.pl",
+    "DNT": "1",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
 }
 
 def get_films_page(args):
@@ -21,9 +21,9 @@ def get_films_page(args):
     """
     # this workaround is necessary because multiprocessing imap takes one arg only
     (cookie, user, n) = args
-    url = f'https://www.filmweb.pl/user/{user}/films'
-    params = {'page': n}
-    response = requests.get(url, params=params, headers={'Cookie': cookie, **HEADERS})
+    url = f"https://www.filmweb.pl/user/{user}/films"
+    params = {"page": n}
+    response = requests.get(url, params=params, headers={"Cookie": cookie, **HEADERS})
     response.raise_for_status()
     return response.text
 
@@ -42,7 +42,7 @@ def get_votes_count(user):
     Args:
         user: user to get ratings for
     """
-    url = f'https://www.filmweb.pl/api/v1/user/{user}/votes/film/count'
+    url = f"https://www.filmweb.pl/api/v1/user/{user}/votes/film/count"
     return _get_json(url, "", "get_votes_count")
 
 def get_user_rating(args):
@@ -82,10 +82,10 @@ def _get_json(url, cookie, func_name):
     Wrapper for request and unified error
     """
     try:
-        response = requests.get(url, headers={'Cookie': cookie, **HEADERS})
+        response = requests.get(url, headers={"Cookie": cookie, **HEADERS})
         response.raise_for_status()
         content = response.json()
     except Exception as e:
-        raise ValueError(f'Failure in {func_name}: {str(e)}')
+        raise ValueError(f"Failure in {func_name}: {str(e)}")
     else:
         return content

@@ -6,16 +6,16 @@ from bs4 import BeautifulSoup
 from urllib.parse import quote_plus
 
 KEY_MAPPING = {
-    'timestamp': 'timestamp',
-    'favorite': 'favorite',
-    'rate': 'user_rating',
-    'global_rate': 'global_rating',
-    'count': 'global_rating_count',
-    'originalTitle': 'original_title',
-    'title': 'pl_title',
-    'year': 'year',
-    'movie_id': 'movie_id',
-    'url': 'url',
+    "timestamp": "timestamp",
+    "favorite": "favorite",
+    "rate": "user_rating",
+    "global_rate": "global_rating",
+    "count": "global_rating_count",
+    "originalTitle": "original_title",
+    "title": "pl_title",
+    "year": "year",
+    "movie_id": "movie_id",
+    "url": "url",
 }
 
 def extract_movie_ids(content):
@@ -24,9 +24,9 @@ def extract_movie_ids(content):
     Args:
         content: raw html
     """
-    soup = BeautifulSoup(content, 'html.parser')
-    id_containers = soup.find_all('div', attrs={'data-film-id': True})
-    ids = set(el['data-film-id'] for el in id_containers)
+    soup = BeautifulSoup(content, "html.parser")
+    id_containers = soup.find_all("div", attrs={"data-film-id": True})
+    ids = set(el["data-film-id"] for el in id_containers)
     # necessary for multiprocessing pickle to work
     return json.dumps(list(ids))
 
@@ -52,30 +52,26 @@ def _rewrite_keys(entry):
     fixed = {new_key: entry.get(old_key) for old_key, new_key in KEY_MAPPING.items()}
     if fixed.get("original_title") is None:
         fixed["original_title"] = fixed["pl_title"]
-    path = quote_plus(f"{fixed['pl_title'].strip()}-{fixed['year']}-{fixed['movie_id']}")
+    path = quote_plus(f"""{fixed["pl_title"].strip()}-{fixed["year"]}-{fixed["movie_id"]}""")
     fixed["url"] = f"https://www.filmweb.pl/film/{path}"
     return fixed
 
-def write_data(movies, user, data_format='json'):
+def write_data(movies, user, formats):
     """
     """
-    assert movies, 'no data to write'
-    date = datetime.now().strftime('%Y%m%d')
-    if data_format == 'all':
-        file_formats = ('csv', 'json')
-    else:
-        file_formats = (data_format, )
-    if 'json' in file_formats:
-        file_name = f'{user}_filmweb_{date}.json'
-        with open(file_name, 'w', encoding='utf-8') as out_file:
+    assert movies, "no data to write"
+    date = datetime.now().strftime("%Y%m%d")
+    if "json" in formats:
+        file_name = f"{user}_filmweb_{date}.json"
+        with open(file_name, "w", encoding="utf-8") as out_file:
             out_file.write(json.dumps(movies))
-        logging.info(f'{file_name} written!')
-    if 'csv' in file_formats:
-        file_name = f'{user}_filmweb_{date}.csv'
-        with open(file_name, 'w', encoding='utf-8') as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=KEY_MAPPING.values(), dialect='unix')
+        logging.info(f"{file_name} written!")
+    if "csv" in formats:
+        file_name = f"{user}_filmweb_{date}.csv"
+        with open(file_name, "w", encoding="utf-8") as out_file:
+            writer = csv.DictWriter(out_file, fieldnames=KEY_MAPPING.values(), dialect="unix")
             writer.writeheader()
             for movie in movies:
                 writer.writerow(movie)
-        logging.info(f'{file_name} written!')
+        logging.info(f"{file_name} written!")
     return file_name

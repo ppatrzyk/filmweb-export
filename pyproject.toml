@@ -1,6 +1,6 @@
 [project]
 name = "filmweb"
-version = "0.6"
+version = "0.7"
 description = "Export movie ratings from filmweb.pl"
 authors = [ {name = "Piotr Patrzyk"}, ]
 license = {text = "MIT"}
