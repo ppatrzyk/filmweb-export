@@ -17,7 +17,7 @@ classifiers = [
 ]
 
 [project.urls]
-Source = "https://github.com/ppatrzyk/filmweb"
+Source = "https://github.com/ppatrzyk/filmweb-export"
 
 [project.scripts]
 filmweb = "filmweb.main:main"
