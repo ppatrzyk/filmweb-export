@@ -2,7 +2,6 @@ import csv
 import logging
 import json
 from datetime import datetime
-from bs4 import BeautifulSoup
 from urllib.parse import quote_plus
 
 KEY_MAPPING = {
@@ -14,23 +13,12 @@ KEY_MAPPING = {
     "originalTitle": "original_title",
     "title": "pl_title",
     "year": "year",
-    "movie_id": "movie_id",
+    "entity": "movie_id",
     "url": "url",
     "date": "date",
 }
 # TODO? country/genre info not visible in api, would need to parse htmls
-
-def extract_movie_ids(content):
-    """
-    Extract movie ids from films page
-    Args:
-        content: raw html
-    """
-    soup = BeautifulSoup(content, "html.parser")
-    id_containers = soup.find_all("div", attrs={"data-film-id": True})
-    ids = set(el["data-film-id"] for el in id_containers)
-    # necessary for multiprocessing pickle to work
-    return json.dumps(list(ids))
+# TODO? countVote1 and so on keys ingnored for now, histogram info?
 
 def merge_data(ids, user_ratings, global_info, global_rating):
     """
@@ -45,7 +33,7 @@ def _movie_id_key(data):
     Parse and reformat data into dict with movie_id as key
     """
     data = (json.loads(el) for el in data)
-    return {entry["movie_id"]: entry for entry in data}
+    return {entry["entity"]: entry for entry in data}
 
 def _fix_keys(entry):
     """

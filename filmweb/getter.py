@@ -3,16 +3,21 @@ import requests
 
 HEADERS = {
     # https://www.whatismybrowser.com/guides/the-latest-user-agent/firefox
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13.4; rv:109.0) Gecko/20100101 Firefox/113.0",
+    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
     "x-locale": "pl_PL",
     "Host": "www.filmweb.pl",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept": "*/*",
     "Accept-Language": "en-US,en;q=0.5",
     "Accept-Encoding": "gzip, deflate, br",
     "Origin": "https://www.filmweb.pl",
     "DNT": "1",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": 'empty',
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-GPC": "1",
+    "TE": "trailers",
 }
 
 def get_films_page(args):
@@ -20,12 +25,13 @@ def get_films_page(args):
     request films page
     """
     # this workaround is necessary because multiprocessing imap takes one arg only
-    (cookie, user, n) = args
-    url = f"https://www.filmweb.pl/user/{user}/films"
-    params = {"page": n}
-    response = requests.get(url, params=params, headers={"Cookie": cookie, **HEADERS})
-    response.raise_for_status()
-    return response.text
+    (cookie, user, friend_query, n) = args
+    if friend_query:
+        url = f"https://www.filmweb.pl/api/v1/logged/friend/{user}/vote/title/film?page={n}"
+    else:
+        url = f"https://www.filmweb.pl/api/v1/logged/vote/title/film?page={n}"
+    data = _get_json(url, cookie, "get_films_page")
+    return json.dumps(data)
 
 def auth_check(cookie):
     """
@@ -38,25 +44,12 @@ def auth_check(cookie):
 
 def get_votes_count(user):
     """
-    Get total count of votes
+    Get total count of voteshttps://www.filmweb.pl/api/v1/user/{user}/votes/film/count
     Args:
         user: user to get ratings for
     """
     url = f"https://www.filmweb.pl/api/v1/user/{user}/votes/film/count"
     return _get_json(url, "", "get_votes_count")
-
-def get_user_rating(args):
-    """
-    Gets user rating
-    """
-    (cookie, movie_id, user, friend_query) = args
-    if friend_query:
-        url = f"https://www.filmweb.pl/api/v1/logged/friend/{user}/vote/film/{movie_id}/details"
-    else:
-        url = f"https://www.filmweb.pl/api/v1/logged/vote/film/{movie_id}/details"
-    data = _get_json(url, cookie, "get_user_rating")
-    data["movie_id"] = movie_id
-    return json.dumps(data)
 
 def get_global_info(movie_id):
     """
@@ -64,7 +57,7 @@ def get_global_info(movie_id):
     """
     url = f"https://www.filmweb.pl/api/v1/title/{movie_id}/info"
     data = _get_json(url, "", "get_global_info")
-    data["movie_id"] = movie_id
+    data["entity"] = movie_id
     return json.dumps(data)
 
 def get_global_rating(movie_id):
@@ -73,7 +66,7 @@ def get_global_rating(movie_id):
     """
     url = f"https://www.filmweb.pl/api/v1/film/{movie_id}/rating"
     data = _get_json(url, "", "get_global_rating")
-    data["movie_id"] = movie_id
+    data["entity"] = movie_id
     data["global_rate"] = data.pop("rate")
     return json.dumps(data)
 
