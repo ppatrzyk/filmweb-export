@@ -42,21 +42,17 @@ filmweb <username> <cookie>
 ```
 $ filmweb -f csv -f json pieca "didomi_token=(...)=="
 INFO:root:Checking args...
-INFO:root:Fetching list of movies [1/6]...
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 38/38 [00:07<00:00,  4.98it/s]
-INFO:root:Parsing list of movies [2/6]...
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 38/38 [00:02<00:00, 15.47it/s]
-INFO:root:User pieca has 938 movies...
-INFO:root:Fetching user ratings [3/6]...
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 938/938 [00:34<00:00, 27.34it/s]
-INFO:root:Fetching info about movies [4/6]...
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 938/938 [00:33<00:00, 27.63it/s]
-INFO:root:Fetching global rating for movies [5/6]...
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 938/938 [00:35<00:00, 26.57it/s]
-INFO:root:Writing data [6/6]...
-INFO:root:pieca_20230523.json written!
-INFO:root:pieca_20230523.csv written!
-$ cat pieca_20230523.json | jq .[0]
+INFO:root:Fetching list of movies [1/4]...
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:00<00:00, 13.94it/s]
+INFO:root:User pieca has 939 movies...
+INFO:root:Fetching info about movies [2/4]...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 939/939 [00:37<00:00, 25.19it/s]
+INFO:root:Fetching global rating for movies [3/4]...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 939/939 [00:39<00:00, 23.70it/s]
+INFO:root:Writing data [4/4]...
+INFO:root:pieca_20231207.json written!
+INFO:root:pieca_20231207.csv written!
+$ cat pieca_20231207.json | jq .[0]
 {
   "timestamp": 1579354599456,
   "favorite": null,
@@ -70,11 +66,11 @@ $ cat pieca_20230523.json | jq .[0]
   "url": "https://www.filmweb.pl/film/Wej%C5%9Bcie+smoka%21-2016-757318",
   "date": "2020-01-18"
 }
-$ cat pieca_20230523.csv | xsv sample 3 | xsv table
-timestamp      favorite  user_rating  global_rating  global_rating_count  original_title          pl_title                 year  movie_id  url                                                                  date
-1588407481213            9            7.91448        3777                 Werckmeister harmóniák  Harmonie Werckmeistera   2000  117108    https://www.filmweb.pl/film/Harmonie+Werckmeistera-2000-117108       2020-05-02
-1425511804375            4            6.69102        87448                Czas surferów           Czas surferów            2005  137466    https://www.filmweb.pl/film/Czas+surfer%C3%B3w-2005-137466           2015-03-05
-1496177689168            6            7.16478        619                  Kukačka v temném lese   Kukułka w ciemnym lesie  1984  35947     https://www.filmweb.pl/film/Kuku%C5%82ka+w+ciemnym+lesie-1984-35947  2017-05-30             2015-03-05
+$ cat pieca_20231207.csv | xsv sample 3 | xsv table
+timestamp      favorite  user_rating  global_rating  global_rating_count  original_title           pl_title                    year  movie_id  url                                                                      date
+1445174195445            4            7.12156        4212                 Bella                    Bella                       2006  294905    https://www.filmweb.pl/film/Bella-2006-294905                            2015-10-18
+1425511762032            4            6.36319        42906                Veronika Decides to Die  Weronika postanawia umrzeć  2009  459178    https://www.filmweb.pl/film/Weronika+postanawia+umrze%C4%87-2009-459178  2015-03-05
+1638617602312            3            8.62545        995071               The Green Mile           Zielona mila                1999  862       https://www.filmweb.pl/film/Zielona+mila-1999-862      
 ```
 
 ### Wszystkie opcje

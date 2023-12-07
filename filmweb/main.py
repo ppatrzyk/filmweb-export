@@ -52,9 +52,9 @@ def main():
         assert total_movies, "No movies available"
         ids = tuple(el.get("entity") for el in user_ratings)
         logging.info("Fetching info about movies [2/4]...")
-        global_info = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_global_info, ids), total=total_movies))
+        global_info = tuple(json.loads(el) for el in tqdm.tqdm(pool.imap_unordered(getter.get_global_info, ids), total=total_movies))
         logging.info("Fetching global rating for movies [3/4]...")
-        global_rating = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_global_rating, ids), total=total_movies))
+        global_rating = tuple(json.loads(el) for el in tqdm.tqdm(pool.imap_unordered(getter.get_global_rating, ids), total=total_movies))
         logging.info("Writing data [4/4]...")
         movies = parser.merge_data(ids, user_ratings, global_info, global_rating)
         parser.write_data(movies, user, formats)

@@ -32,7 +32,6 @@ def _movie_id_key(data):
     """
     Parse and reformat data into dict with movie_id as key
     """
-    data = (json.loads(el) for el in data)
     return {entry["entity"]: entry for entry in data}
 
 def _fix_keys(entry):
