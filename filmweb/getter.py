@@ -3,12 +3,13 @@ import requests
 
 HEADERS = {
     # https://www.whatismybrowser.com/guides/the-latest-user-agent/firefox
-    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0",
     "x-locale": "pl_PL",
     "Host": "www.filmweb.pl",
+    "Referer": "https://www.filmweb.pl",
     "Accept": "*/*",
     "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
     "Origin": "https://www.filmweb.pl",
     "DNT": "1",
     "Connection": "keep-alive",
