@@ -4,4 +4,4 @@ docopt==0.6.2
 idna==3.18
 requests==2.34.2
 tqdm==4.67.3
-urllib3==2.7.0
+urllib3==2.8.0
