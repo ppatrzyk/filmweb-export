@@ -20,6 +20,24 @@ Albo:
 pip install https://github.com/ppatrzyk/filmweb-export/archive/master.zip
 ```
 
+### Gotowe binarki
+
+Jeśli nie chcesz instalować Pythona, pobierz samodzielny plik wykonywalny z zakładki [Releases](https://github.com/ppatrzyk/filmweb-export/releases):
+
+- `filmweb-windows-x64.exe` - Windows (x64),
+- `filmweb-linux-x64` - Linux (x64); po pobraniu nadaj uprawnienia do uruchamiania: `chmod +x filmweb-linux-x64`.
+
+Binarki działają tak samo jak polecenie `filmweb`, np. `./filmweb-linux-x64 <username> <cookie>`.
+
+Własną binarkę możesz zbudować lokalnie ([PyInstaller](https://pyinstaller.org)):
+
+```
+pip install -r requirements.txt pyinstaller
+pyinstaller filmweb.spec
+```
+
+Wynik znajdziesz w katalogu `dist/`. Binarki z każdego commita są też dostępne jako artefakty workflow *Build binaries* w zakładce Actions.
+
 ## Instrukcja
 
 Istnieje możliwość eksportu własnych ocen lub ocen znajomych - proszę podać nazwę użytkownika jako `username`. Do dostępu jest potrzebne zalogowanie się na portal i podanie do skryptu wartości `cookie` dla strony filmweb. Podstawowe użycie:

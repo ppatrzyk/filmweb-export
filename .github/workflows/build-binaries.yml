@@ -1,0 +1,90 @@
+name: Build binaries
+
+# Standalone executables (no Python needed) built with PyInstaller.
+#  - every push / pull request: binaries are available as workflow artifacts
+#  - published release: binaries are attached to the release as assets
+on:
+  push:
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'release' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Older Ubuntu on purpose: a binary linked against an older glibc
+          # also runs on newer distributions, but not the other way around.
+          - os: ubuntu-22.04
+            target: linux-x64
+            built: dist/filmweb
+            asset: filmweb-linux-x64
+          - os: windows-latest
+            target: windows-x64
+            built: dist/filmweb.exe
+            asset: filmweb-windows-x64.exe
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build executable
+        run: pyinstaller filmweb.spec
+
+      - name: Smoke test
+        shell: bash
+        run: ./${{ matrix.built }} --help
+
+      - name: Rename executable
+        shell: bash
+        run: mv "${{ matrix.built }}" "dist/${{ matrix.asset }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+          if-no-files-found: error
+
+  release:
+    name: Attach binaries to release
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to upload release assets
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: assets
+          merge-multiple: true
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd assets
+          sha256sum filmweb-* > SHA256SUMS.txt
+          ls -l
+          gh release upload "${{ github.event.release.tag_name }}" filmweb-* SHA256SUMS.txt \
+            --repo "${{ github.repository }}" --clobber
