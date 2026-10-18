@@ -5,13 +5,18 @@
 # Build (from the repository root):
 #
 #     pip install -r requirements.txt pyinstaller
-#     pyinstaller filmweb.spec
+#     pyinstaller packaging/filmweb.spec
 #
 # Result: dist/filmweb (Linux) or dist/filmweb.exe (Windows).
 
+import os
+
+# SPECPATH is the directory of this file (packaging/); the project root is its parent.
+ROOT = os.path.dirname(SPECPATH)
+
 a = Analysis(
-    ["packaging/entrypoint.py"],
-    pathex=["."],
+    [os.path.join(SPECPATH, "entrypoint.py")],
+    pathex=[ROOT],
     binaries=[],
     datas=[],
     hiddenimports=[],

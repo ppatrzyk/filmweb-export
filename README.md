@@ -33,7 +33,7 @@ Własną binarkę możesz zbudować lokalnie ([PyInstaller](https://pyinstaller.
 
 ```
 pip install -r requirements.txt pyinstaller
-pyinstaller filmweb.spec
+pyinstaller packaging/filmweb.spec
 ```
 
 Wynik znajdziesz w katalogu `dist/`. Binarki z każdego commita są też dostępne jako artefakty workflow *Build binaries* w zakładce Actions.

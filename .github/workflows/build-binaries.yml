@@ -50,7 +50,7 @@ jobs:
           pip install -r requirements.txt pyinstaller
 
       - name: Build executable
-        run: pyinstaller filmweb.spec
+        run: pyinstaller packaging/filmweb.spec
 
       - name: Smoke test
         shell: bash
