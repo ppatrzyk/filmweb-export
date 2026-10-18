@@ -48,6 +48,16 @@ filmweb <username> <cookie>
 
 ### Skąd wziąć cookie?
 
+#### Użycie dodatku [cookie-editor](https://cookie-editor.com/)
+
+1. Mając zainstalowany dodatek wejdź na stronę [filmweb.pl](https://www.filmweb.pl/) i zaloguj się.
+2. Kliknij na dodatku 
+<img width="500" height="369" alt="image" src="https://github.com/user-attachments/assets/0543cb8a-31e6-4d04-a418-b5a1596e8420" />    
+
+3. Następnie wybierz "Export" i wybierz "Header String" - wtedy masz w schowku gotowca do wklejenia.
+
+#### Ręczne pobranie ciasteczek
+
 1. Otwórz *Network Monitor* w przeglądarce (`Ctrl+Shift+E` w Firefoxie),
 2. Zaloguj się i wejdź na filmweb. Wpisz `info` do filtra w *Network Monitor* i zaznacz pierwszy wynik,
 3. Wejdź w zakładkę *Headers* > *Request Headers*,
