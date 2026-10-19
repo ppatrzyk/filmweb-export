@@ -8,6 +8,9 @@ Options:
     -f --format=<fileformat>      Output file format: json (default), csv, letterboxd
     -t --type=<titletype>         Title type: movie, tv_show, game (default: all)
     -d --debug                    Debug prints
+
+Source:
+    https://github.com/ppatrzyk/filmweb-export
 """
 
 from docopt import docopt
