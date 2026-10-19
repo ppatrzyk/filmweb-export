@@ -1,12 +1,14 @@
 """filmweb
 
 Usage:
-    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--debug] <username> <cookie>
+    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--threads=<n>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
     -f --format=<fileformat>      Output file format: json (default), csv, letterboxd
     -t --type=<titletype>         Title type: movie, tv_show, game (default: all)
+    -j --threads=<n>              Max number of parallel workers, lowers load on the server
+                                  (default: number of CPUs, higher values are capped to it)
     -d --debug                    Debug prints
 """
 
@@ -62,6 +64,20 @@ def _normalize_title_types(raw_types):
                 seen.add(resolved)
     return tuple(normalized)
 
+def _resolve_workers(raw_threads):
+    """Number of parallel workers: CPU count by default, user value can only lower it"""
+    if raw_threads is None:
+        return PARALLEL_PROC
+    try:
+        threads = int(raw_threads)
+    except ValueError:
+        raise AssertionError(f"--threads must be an integer, got: {raw_threads}")
+    assert threads >= 1, "--threads must be at least 1"
+    if threads > PARALLEL_PROC:
+        logging.warning(f"--threads={threads} exceeds default ({PARALLEL_PROC}), using {PARALLEL_PROC}")
+        return PARALLEL_PROC
+    return threads
+
 def main():
     args = docopt(__doc__)
     user = args["<username>"]
@@ -74,7 +90,8 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
-    pool = multiprocessing.Pool(processes=PARALLEL_PROC)
+    workers = _resolve_workers(args["--threads"])
+    pool = multiprocessing.Pool(processes=workers)
     try:
         logging.info("Checking args...")
         cookie = re.sub("Cookie:", "", cookie).strip()

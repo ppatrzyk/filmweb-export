@@ -28,6 +28,14 @@ Istnieje możliwość eksportu własnych ocen lub ocen znajomych - proszę poda�
 filmweb <username> <cookie>
 ```
 
+### Ograniczanie obciążenia serwera
+
+Domyślnie program używa tylu równoległych procesów, ile jest dostępnych CPU. Można to ograniczyć opcją `--threads` (wartość większa od domyślnej jest ucinana do domyślnej):
+
+```
+filmweb --threads 2 <username> <cookie>
+```
+
 ### Skąd wziąć cookie?
 
 1. Otwórz *Network Monitor* w przeglądarce (`Ctrl+Shift+E` w Firefoxie),
