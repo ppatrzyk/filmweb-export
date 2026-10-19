@@ -1,7 +1,7 @@
 """filmweb
 
 Usage:
-    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--threads=<n>] [--debug] <username> <cookie>
+    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--threads=<n>] [--pages=<range>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
@@ -9,6 +9,8 @@ Options:
     -t --type=<titletype>         Title type: movie, tv_show, game (default: all)
     -j --threads=<n>              Max number of parallel workers, lowers load on the server
                                   (default: number of CPUs, higher values are capped to it)
+    -p --pages=<range>            Fetch only given pages of ratings list (100 titles per page),
+                                  e.g. 3 or 2-5 or 4- (default: all pages)
     -d --debug                    Debug prints
 """
 
@@ -64,6 +66,21 @@ def _normalize_title_types(raw_types):
                 seen.add(resolved)
     return tuple(normalized)
 
+def _parse_pages(raw_pages):
+    """Parse --pages value into (first, last) tuple, last=None means 'to the end'"""
+    if raw_pages is None:
+        return (1, None)
+    match = re.fullmatch(r"\s*(\d+)\s*(-\s*(\d*))?\s*", raw_pages)
+    assert match, f"--pages must look like 3, 2-5 or 4-, got: {raw_pages}"
+    first = int(match.group(1))
+    if match.group(2) is None:
+        last = first
+    else:
+        last = int(match.group(3)) if match.group(3) else None
+    assert first >= 1, "--pages must start at page 1 or later"
+    assert last is None or last >= first, "--pages range end must not be lower than its start"
+    return (first, last)
+
 def _resolve_workers(raw_threads):
     """Number of parallel workers: CPU count by default, user value can only lower it"""
     if raw_threads is None:
@@ -90,6 +107,7 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
+    first_page, last_page = _parse_pages(args["--pages"])
     workers = _resolve_workers(args["--threads"])
     pool = multiprocessing.Pool(processes=workers)
     try:
@@ -106,9 +124,14 @@ def main():
             if pages == 0:
                 logging.info(f"Skipping {title_type}, no ratings found")
                 continue
-            logging.info(f"Fetching list of {title_type} ratings...")
-            get_titles_page_args = ((cookie, user, friend_query, api_title_type, page) for page in range(1, pages+1))
-            user_ratings_raw = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_titles_page, get_titles_page_args), total=pages))
+            end_page = pages if last_page is None else min(last_page, pages)
+            if first_page > end_page:
+                logging.info(f"Skipping {title_type}, requested pages start after last page ({pages})")
+                continue
+            pages_to_fetch = end_page - first_page + 1
+            logging.info(f"Fetching list of {title_type} ratings (pages {first_page}-{end_page} of {pages})...")
+            get_titles_page_args = ((cookie, user, friend_query, api_title_type, page) for page in range(first_page, end_page+1))
+            user_ratings_raw = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_titles_page, get_titles_page_args), total=pages_to_fetch))
             user_ratings_by_type.append(tuple(itertools.chain.from_iterable((json.loads(el) for el in user_ratings_raw))))
         user_ratings = tuple(itertools.chain.from_iterable(user_ratings_by_type))
         total_movies = len(user_ratings)
