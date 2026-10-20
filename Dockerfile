@@ -1,5 +1,3 @@
-LABEL org.opencontainers.image.source=https://github.com/ppatrzyk/filmweb-export
-
 FROM docker.io/library/python:3.15.0-trixie AS python-build
 
 RUN python -m venv /opt/venv
@@ -9,6 +7,7 @@ COPY . /filmweb
 RUN pip3 install .
 
 FROM docker.io/library/python:3.15.0-slim-trixie AS final-image
+LABEL org.opencontainers.image.source=https://github.com/ppatrzyk/filmweb-export
 
 WORKDIR /filmweb
 COPY --from=python-build /opt/venv /opt/venv
