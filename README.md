@@ -9,7 +9,7 @@ Eksport ocen filmów, seriali i gier z serwisu [Filmweb](https://www.filmweb.pl)
 ```bash
 pip install filmweb
 
-# master branch na gitubie:
+# master branch na githubie:
 pip install https://github.com/ppatrzyk/filmweb-export/archive/master.zip
 ```
 
@@ -41,10 +41,10 @@ filmweb <username> <cookie>
 
 ### Ograniczanie obciążenia serwera
 
-Domyślnie program używa tylu równoległych procesów, ile jest dostępnych CPU. Można to ograniczyć opcją `--threads` (wartość większa od domyślnej jest ucinana do domyślnej):
+Domyślnie program używa tylu równoległych procesów, ile jest dostępnych CPU. Można to ograniczyć opcją `--workers`:
 
 ```bash
-filmweb --threads 2 <username> <cookie>
+filmweb --workers 2 <username> <cookie>
 ```
 
 Domyślnie pobierane są wszystkie strony z listą ocen (po 100 tytułów na stronę, osobno dla każdego typu). Opcja `--pages` pozwala pobrać tylko wybrany zakres:
@@ -57,22 +57,8 @@ filmweb --pages 4- <username> <cookie>    # od strony 4 do końca
 
 ### Skąd wziąć cookie?
 
-#### Użycie dodatku [cookie-editor](https://cookie-editor.com/)
-
-1. Mając zainstalowany dodatek wejdź na stronę [filmweb.pl](https://www.filmweb.pl/) i zaloguj się.
-2. Kliknij na dodatku 
-<img width="500" height="369" alt="image" src="https://github.com/user-attachments/assets/0543cb8a-31e6-4d04-a418-b5a1596e8420" />    
-
-3. Następnie wybierz "Export" i wybierz "Header String" - wtedy masz w schowku gotowca do wklejenia.
-
-#### Ręczne pobranie ciasteczek
-
-1. Otwórz *Network Monitor* w przeglądarce (`Ctrl+Shift+E` w Firefoxie),
-2. Zaloguj się i wejdź na filmweb. Wpisz `info` do filtra w *Network Monitor* i zaznacz pierwszy wynik,
-3. Wejdź w zakładkę *Headers* > *Request Headers*,
-4. Skopiuj wartość *Cookie* i podaj ją jako argument do skryptu.
-
-![Browser Screenshot](browser_screen.png)
+ - [Network Monitor w przeglądarce](cookies_browser.md)
+ - [Rozszerzenie cookie-editor](cookies_extension.md)
 
 ### Przykład
 
