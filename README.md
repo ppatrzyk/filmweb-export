@@ -4,45 +4,38 @@ Eksport ocen filmów, seriali i gier z serwisu [Filmweb](https://www.filmweb.pl)
 
 ## Instalacja
 
-Wymagania:
+### Pakiet Python
 
-- [Python](https://www.python.org/).
-
-Instalacja:
-
-```
+```bash
 pip install filmweb
-```
 
-Albo:
-
-```
+# master branch na gitubie:
 pip install https://github.com/ppatrzyk/filmweb-export/archive/master.zip
+```
+
+Wymaga instalacji [Pythona](https://www.python.org/).
+
+### Docker
+
+```bash
+podman run \
+    --rm \
+    -v ./:/filmweb \
+    ghcr.io/ppatrzyk/filmweb-export:0.12 \
+    filmweb <username> <cookie>
 ```
 
 ### Gotowe binarki
 
-Jeśli nie chcesz instalować Pythona, pobierz samodzielny plik wykonywalny z zakładki [Releases](https://github.com/ppatrzyk/filmweb-export/releases):
+Samodzielny plik wykonywalny zbudowany przy użyciu [PyInstaller](https://pyinstaller.org) (Linux, MacOS, Windows).
 
-- `filmweb-windows-x64.exe` - Windows (x64),
-- `filmweb-linux-x64` - Linux (x64); po pobraniu nadaj uprawnienia do uruchamiania: `chmod +x filmweb-linux-x64`.
-
-Binarki działają tak samo jak polecenie `filmweb`, np. `./filmweb-linux-x64 <username> <cookie>`.
-
-Własną binarkę możesz zbudować lokalnie ([PyInstaller](https://pyinstaller.org)):
-
-```
-pip install -r requirements.txt pyinstaller
-pyinstaller packaging/filmweb.spec
-```
-
-Wynik znajdziesz w katalogu `dist/`. Binarki z każdego commita są też dostępne jako artefakty workflow *Build binaries* w zakładce Actions.
+Pobierz z zakładki [Releases](https://github.com/ppatrzyk/filmweb-export/releases).
 
 ## Instrukcja
 
 Istnieje możliwość eksportu własnych ocen lub ocen znajomych - proszę podać nazwę użytkownika jako `username`. Do dostępu jest potrzebne zalogowanie się na portal i podanie do skryptu wartości `cookie` dla strony filmweb. Podstawowe użycie:
 
-```
+```bash
 filmweb <username> <cookie>
 ```
 
@@ -50,13 +43,13 @@ filmweb <username> <cookie>
 
 Domyślnie program używa tylu równoległych procesów, ile jest dostępnych CPU. Można to ograniczyć opcją `--threads` (wartość większa od domyślnej jest ucinana do domyślnej):
 
-```
+```bash
 filmweb --threads 2 <username> <cookie>
 ```
 
 Domyślnie pobierane są wszystkie strony z listą ocen (po 100 tytułów na stronę, osobno dla każdego typu). Opcja `--pages` pozwala pobrać tylko wybrany zakres:
 
-```
+```bash
 filmweb --pages 2-5 <username> <cookie>   # strony 2-5
 filmweb --pages 3 <username> <cookie>     # tylko strona 3
 filmweb --pages 4- <username> <cookie>    # od strony 4 do końca
@@ -83,7 +76,7 @@ filmweb --pages 4- <username> <cookie>    # od strony 4 do końca
 
 ### Przykład
 
-```
+```bash
 $ filmweb -f csv -f json pieca "didomi_token=(...)=="
 INFO:root:Checking args...
 INFO:root:Fetching list of rated titles [1/4]...
@@ -129,18 +122,24 @@ $ duckdb -box -c "SELECT * FROM read_csv_auto('pieca_20260604.csv') ORDER BY RAN
 
 ### Wszystkie opcje
 
-```
+```bash
 $ filmweb -h
 filmweb
 
 Usage:
-    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--debug] <username> <cookie>
+    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
     -f --format=<fileformat>      Output file format: json (default), csv, letterboxd
-    -t --type=<titletype>         Title type: movie, tv_show, game (all by default)
+    -t --type=<titletype>         Title type: movie, tv_show, game (default: all)
+    -w --workers=<n>              Number of parallel workers (default: CPU count)
+    -p --pages=<range>            Fetch only given pages of ratings list (100 titles per page),
+                                  e.g. 3 or 2-5 or 4- (default: all pages)
     -d --debug                    Debug prints
+
+Source:
+    https://github.com/ppatrzyk/filmweb-export
 ```
 
 ## Dostępne dane:
@@ -160,3 +159,25 @@ movie\_id | _id filmu_ (filmweb)
 title\_type | _typ tytułu_ (movie, tv\_show, game)
 title\_sub\_type | _podtyp tytułu_ (np. serial\_tv, mini\_serial)
 url | _strona filmu_
+
+## DEV
+
+Lokalna instalacja:
+
+```bash
+pip3 install -e .[dev]
+```
+
+Pyinstaller:
+
+```bash
+pyinstaller --distpath pyinstaller_dist --workpath pyinstaller_build packaging/filmweb.spec
+```
+
+Wynik znajdziesz w katalogu `pyinstaller_dist/`.
+
+Docker:
+
+```bash
+podman build -t ghcr.io/ppatrzyk/filmweb-export:0.12 .
+```
