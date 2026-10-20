@@ -21,7 +21,7 @@ Wymaga instalacji [Pythona](https://www.python.org/).
 podman run \
     --rm \
     -v ./:/filmweb \
-    ghcr.io/ppatrzyk/filmweb-export:0.12 \
+    ghcr.io/ppatrzyk/filmweb-export:v0.12 \
     filmweb <username> <cookie>
 ```
 
@@ -165,5 +165,5 @@ Wynik znajdziesz w katalogu `pyinstaller_dist/`.
 Docker:
 
 ```bash
-podman build -t ghcr.io/ppatrzyk/filmweb-export:0.12 .
+podman build -t ghcr.io/ppatrzyk/filmweb-export:dev .
 ```
