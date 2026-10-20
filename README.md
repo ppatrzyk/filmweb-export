@@ -46,6 +46,22 @@ Istnieje możliwość eksportu własnych ocen lub ocen znajomych - proszę poda�
 filmweb <username> <cookie>
 ```
 
+### Ograniczanie obciążenia serwera
+
+Domyślnie program używa tylu równoległych procesów, ile jest dostępnych CPU. Można to ograniczyć opcją `--threads` (wartość większa od domyślnej jest ucinana do domyślnej):
+
+```
+filmweb --threads 2 <username> <cookie>
+```
+
+Domyślnie pobierane są wszystkie strony z listą ocen (po 100 tytułów na stronę, osobno dla każdego typu). Opcja `--pages` pozwala pobrać tylko wybrany zakres:
+
+```
+filmweb --pages 2-5 <username> <cookie>   # strony 2-5
+filmweb --pages 3 <username> <cookie>     # tylko strona 3
+filmweb --pages 4- <username> <cookie>    # od strony 4 do końca
+```
+
 ### Skąd wziąć cookie?
 
 #### Użycie dodatku [cookie-editor](https://cookie-editor.com/)
