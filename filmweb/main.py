@@ -16,16 +16,19 @@ Source:
     https://github.com/ppatrzyk/filmweb-export
 """
 
-from docopt import docopt
 import itertools
 import json
-import re
 import logging
-from math import ceil
 import multiprocessing
+import re
+from math import ceil
+
 import tqdm
-from . import getter
-from . import parser
+from docopt import docopt
+
+from . import getter, parser
+
+logger = logging.getLogger(__name__)
 
 CPU_COUNT = multiprocessing.cpu_count()
 MOVIES_PER_PAGE = 100
@@ -54,19 +57,23 @@ TITLE_TYPE_ALIASES = {
     "games": "game",
 }
 
+
 def _normalize_title_types(raw_types):
     """Normalize user title type values to supported API types"""
     normalized = []
     seen = set()
-    for title_type in (raw_types or DEFAULT_TITLE_TYPES):
+    for title_type in raw_types or DEFAULT_TITLE_TYPES:
         key = title_type.lower().strip()
-        resolved_types = DEFAULT_TITLE_TYPES if key == "all" else (TITLE_TYPE_ALIASES.get(key), )
+        resolved_types = (
+            DEFAULT_TITLE_TYPES if key == "all" else (TITLE_TYPE_ALIASES.get(key),)
+        )
         assert all(resolved_types), f"Unsupported title type: {title_type}"
         for resolved in resolved_types:
             if resolved not in seen:
                 normalized.append(resolved)
                 seen.add(resolved)
     return tuple(normalized)
+
 
 def _parse_pages(raw_pages):
     """Parse --pages value into (first, last) tuple, last=None means 'to the end'"""
@@ -80,8 +87,11 @@ def _parse_pages(raw_pages):
     else:
         last = int(match.group(3)) if match.group(3) else None
     assert first >= 1, "--pages must start at page 1 or later"
-    assert last is None or last >= first, "--pages range end must not be lower than its start"
+    assert last is None or last >= first, (
+        "--pages range end must not be lower than its start"
+    )
     return (first, last)
+
 
 def _resolve_workers(raw_workers):
     """Number of parallel workers: CPU count by default"""
@@ -91,18 +101,19 @@ def _resolve_workers(raw_workers):
         workers = int(raw_workers)
         assert workers >= 1, "--workers must be at least 1"
         if workers > CPU_COUNT:
-            logging.warning(f"--workers={workers} exceeds CPU count ({CPU_COUNT})")
+            logger.warning(f"--workers={workers} exceeds CPU count ({CPU_COUNT})")
         return workers
     except ValueError:
         raise AssertionError(f"--workers must be positive integer, got: {raw_workers}")
+
 
 def main():
     args = docopt(__doc__)
     user = args["<username>"]
     cookie = args["<cookie>"]
     assert all([user, cookie]), "Empty arguments provided"
-    formats = set(f.lower() for f in (args["--format"] or ("json", )))
-    assert (formats and formats.issubset(FORMATS)), f"Supported file formats: {FORMATS}"
+    formats = {f.lower() for f in (args["--format"] or ("json",))}
+    assert formats and formats.issubset(FORMATS), f"Supported file formats: {FORMATS}"
     title_types = _normalize_title_types(args["--type"])
     if args["--debug"]:
         logging.basicConfig(level=logging.DEBUG)
@@ -112,44 +123,73 @@ def main():
     workers = _resolve_workers(args["--workers"])
     pool = multiprocessing.Pool(processes=workers)
     try:
-        logging.info("Checking args...")
+        logger.info("Checking args...")
         cookie = re.sub("Cookie:", "", cookie).strip()
         logged_in_user = getter.auth_check(cookie)
-        friend_query = (user != logged_in_user)
+        friend_query = user != logged_in_user
         user_ratings_by_type = []
-        logging.info("Fetching list of rated titles [1/4]...")
+        logger.info("Fetching list of rated titles [1/4]...")
         for title_type in title_types:
             api_title_type = TITLE_TYPE_TO_API[title_type]
             votes_total = getter.get_votes_count(user, api_title_type)
-            pages = ceil(votes_total/MOVIES_PER_PAGE)
+            pages = ceil(votes_total / MOVIES_PER_PAGE)
             if pages == 0:
-                logging.info(f"Skipping {title_type}, no ratings found")
+                logger.info(f"Skipping {title_type}, no ratings found")
                 continue
             end_page = pages if last_page is None else min(last_page, pages)
             if first_page > end_page:
-                logging.info(f"Skipping {title_type}, requested pages start after last page ({pages})")
+                logger.info(
+                    f"Skipping {title_type}, requested pages start after last page ({pages})"
+                )
                 continue
             pages_to_fetch = end_page - first_page + 1
-            logging.info(f"Fetching list of {title_type} ratings (pages {first_page}-{end_page} of {pages})...")
-            get_titles_page_args = ((cookie, user, friend_query, api_title_type, page) for page in range(first_page, end_page+1))
-            user_ratings_raw = tuple(tqdm.tqdm(pool.imap_unordered(getter.get_titles_page, get_titles_page_args), total=pages_to_fetch))
-            user_ratings_by_type.append(tuple(itertools.chain.from_iterable((json.loads(el) for el in user_ratings_raw))))
+            logger.info(
+                f"Fetching list of {title_type} ratings (pages {first_page}-{end_page} of {pages})..."
+            )
+            get_titles_page_args = (
+                (cookie, user, friend_query, api_title_type, page)
+                for page in range(first_page, end_page + 1)
+            )
+            user_ratings_raw = tuple(
+                tqdm.tqdm(
+                    pool.imap_unordered(getter.get_titles_page, get_titles_page_args),
+                    total=pages_to_fetch,
+                )
+            )
+            user_ratings_by_type.append(
+                tuple(
+                    itertools.chain.from_iterable(
+                        json.loads(el) for el in user_ratings_raw
+                    )
+                )
+            )
         user_ratings = tuple(itertools.chain.from_iterable(user_ratings_by_type))
         total_movies = len(user_ratings)
-        logging.info(f"User {user} has {total_movies} rated titles...")
+        logger.info(f"User {user} has {total_movies} rated titles...")
         assert total_movies, "No rated titles available"
         ids = tuple(el.get("entity") for el in user_ratings)
-        logging.info("Fetching info about titles [2/4]...")
-        global_info = tuple(json.loads(el) for el in tqdm.tqdm(pool.imap_unordered(getter.get_global_info, ids), total=total_movies))
-        logging.info("Fetching global rating for titles [3/4]...")
-        global_rating = tuple(json.loads(el) for el in tqdm.tqdm(pool.imap_unordered(getter.get_global_rating, ids), total=total_movies))
-        logging.info("Writing data [4/4]...")
+        logger.info("Fetching info about titles [2/4]...")
+        global_info = tuple(
+            json.loads(el)
+            for el in tqdm.tqdm(
+                pool.imap_unordered(getter.get_global_info, ids), total=total_movies
+            )
+        )
+        logger.info("Fetching global rating for titles [3/4]...")
+        global_rating = tuple(
+            json.loads(el)
+            for el in tqdm.tqdm(
+                pool.imap_unordered(getter.get_global_rating, ids), total=total_movies
+            )
+        )
+        logger.info("Writing data [4/4]...")
         movies = parser.merge_data(ids, user_ratings, global_info, global_rating)
         parser.write_data(movies, user, formats)
-    except Exception as e:
-        logging.error(f"Program error: {str(e)}")
+    except Exception as e:  # noqa
+        logger.error(f"Program error: {e!s}")
     finally:
         pool.close()
+
 
 if __name__ == "__main__":
     main()
