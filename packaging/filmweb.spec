@@ -4,8 +4,8 @@
 #
 # Build (from the repository root):
 #
-#     pip install -r requirements.txt pyinstaller
-#     pyinstaller packaging/filmweb.spec
+#     pip install -e .[dev]
+#     pyinstaller --distpath pyinstaller_dist --workpath pyinstaller_build packaging/filmweb.spec
 #
 # Result: dist/filmweb (Linux) or dist/filmweb.exe (Windows).
 
