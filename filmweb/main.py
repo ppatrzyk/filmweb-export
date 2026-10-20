@@ -1,14 +1,13 @@
 """filmweb
 
 Usage:
-    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--threads=<n>] [--pages=<range>] [--debug] <username> <cookie>
+    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
     -f --format=<fileformat>      Output file format: json (default), csv, letterboxd
     -t --type=<titletype>         Title type: movie, tv_show, game (default: all)
-    -j --threads=<n>              Max number of parallel workers, lowers load on the server
-                                  (default: number of CPUs, higher values are capped to it)
+    -w --workers=<n>              Number of parallel workers (default: CPU count)
     -p --pages=<range>            Fetch only given pages of ratings list (100 titles per page),
                                   e.g. 3 or 2-5 or 4- (default: all pages)
     -d --debug                    Debug prints
@@ -25,7 +24,7 @@ import tqdm
 from . import getter
 from . import parser
 
-PARALLEL_PROC = multiprocessing.cpu_count()
+CPU_COUNT = multiprocessing.cpu_count()
 MOVIES_PER_PAGE = 100
 FORMATS = {"csv", "json", "letterboxd"}
 DEFAULT_TITLE_TYPES = ("movie", "tv_show", "game")
@@ -81,19 +80,18 @@ def _parse_pages(raw_pages):
     assert last is None or last >= first, "--pages range end must not be lower than its start"
     return (first, last)
 
-def _resolve_workers(raw_threads):
-    """Number of parallel workers: CPU count by default, user value can only lower it"""
-    if raw_threads is None:
-        return PARALLEL_PROC
+def _resolve_workers(raw_workers):
+    """Number of parallel workers: CPU count by default"""
+    if raw_workers is None:
+        return CPU_COUNT
     try:
-        threads = int(raw_threads)
+        workers = int(raw_workers)
+        assert workers >= 1, "--workers must be at least 1"
+        if workers > CPU_COUNT:
+            logging.warning(f"--workers={workers} exceeds CPU count ({CPU_COUNT})")
+        return workers
     except ValueError:
-        raise AssertionError(f"--threads must be an integer, got: {raw_threads}")
-    assert threads >= 1, "--threads must be at least 1"
-    if threads > PARALLEL_PROC:
-        logging.warning(f"--threads={threads} exceeds default ({PARALLEL_PROC}), using {PARALLEL_PROC}")
-        return PARALLEL_PROC
-    return threads
+        raise AssertionError(f"--workers must be positive integer, got: {raw_workers}")
 
 def main():
     args = docopt(__doc__)
@@ -108,7 +106,7 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     first_page, last_page = _parse_pages(args["--pages"])
-    workers = _resolve_workers(args["--threads"])
+    workers = _resolve_workers(args["--workers"])
     pool = multiprocessing.Pool(processes=workers)
     try:
         logging.info("Checking args...")
