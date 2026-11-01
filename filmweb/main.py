@@ -1,7 +1,7 @@
 """filmweb
 
 Usage:
-    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--debug] <username> <cookie>
+    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
@@ -10,6 +10,9 @@ Options:
     -w --workers=<n>              Number of parallel workers (default: CPU count)
     -p --pages=<range>            Fetch only given pages of ratings list (100 titles per page),
                                   e.g. 3 or 2-5 or 4- (default: all pages)
+    -s --since=<date>             Export only titles rated (or re-rated) on or after
+                                  given date, inclusive, format YYYY-MM-DD
+                                  (default: all titles)
     -d --debug                    Debug prints
 
 Source:
@@ -21,6 +24,7 @@ import json
 import logging
 import multiprocessing
 import re
+from datetime import datetime
 from math import ceil
 
 import tqdm
@@ -93,6 +97,28 @@ def _parse_pages(raw_pages):
     return (first, last)
 
 
+def _parse_since(raw_since):
+    """
+    Parse --since value (YYYY-MM-DD) into timestamp in ms, None means 'no limit'.
+    The day is inclusive: the limit is local midnight, the same timezone
+    that is used for the `date` column in the output.
+    """
+    if raw_since is None:
+        return None
+    try:
+        since = datetime.strptime(raw_since.strip(), "%Y-%m-%d")
+    except ValueError:
+        raise AssertionError(f"--since must look like 2026-10-19, got: {raw_since}")
+    return int(since.timestamp() * 1000)
+
+
+def _filter_since(user_ratings, since_ms):
+    """Keep only ratings with timestamp not older than the limit"""
+    if since_ms is None:
+        return user_ratings
+    return tuple(el for el in user_ratings if el.get("timestamp", 0) >= since_ms)
+
+
 def _resolve_workers(raw_workers):
     """Number of parallel workers: CPU count by default"""
     if raw_workers is None:
@@ -120,6 +146,7 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     first_page, last_page = _parse_pages(args["--pages"])
+    since_ms = _parse_since(args["--since"])
     workers = _resolve_workers(args["--workers"])
     pool = multiprocessing.Pool(processes=workers)
     try:
@@ -167,6 +194,15 @@ def main():
         total_movies = len(user_ratings)
         logger.info(f"User {user} has {total_movies} rated titles...")
         assert total_movies, "No rated titles available"
+        if since_ms is not None:
+            user_ratings = _filter_since(user_ratings, since_ms)
+            total_movies = len(user_ratings)
+            logger.info(
+                f"{total_movies} titles rated since {args['--since']} (inclusive)..."
+            )
+            if not total_movies:
+                logger.info("Nothing to export, finishing")
+                return
         ids = tuple(el.get("entity") for el in user_ratings)
         logger.info("Fetching info about titles [2/4]...")
         global_info = tuple(
