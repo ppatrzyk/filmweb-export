@@ -63,6 +63,8 @@ Opcja `--since YYYY-MM-DD` eksportuje tylko tytuły ocenione (lub ze zmienioną 
 filmweb --since 2026-10-19 <username> <cookie>
 ```
 
+Dlaczego lista ocen jest pobierana w całości, a nie tylko do pierwszej starszej oceny? Filmweb zwraca oceny w stałej kolejności (domyślnie od najnowszej dodanej), ale pole `timestamp` to czas ostatniej zmiany oceny. Gdy zmienisz ocenę starego filmu, jego `timestamp` jest nowy, a pozycja na liście pozostaje zwykle na dawnym miejscu. Pobieranie od początku i przerwanie na pierwszej starej ocenie pominęłoby takie zmiany. Dodatkowo strony listy są pobierane równolegle, więc kolejność w pliku wynikowym nie jest chronologiczna.
+
 ### Skąd wziąć cookie?
 
  - [Network Monitor w przeglądarce](cookies_browser.md)
