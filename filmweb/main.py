@@ -104,19 +104,12 @@ def _parse_since(raw_since):
     that is used for the `date` column in the output.
     """
     if raw_since is None:
-        return None
+        return 0
     try:
         since = datetime.strptime(raw_since.strip(), "%Y-%m-%d")
     except ValueError:
         raise AssertionError(f"--since must look like 2026-10-19, got: {raw_since}")
     return int(since.timestamp() * 1000)
-
-
-def _filter_since(user_ratings, since_ms):
-    """Keep only ratings with timestamp not older than the limit"""
-    if since_ms is None:
-        return user_ratings
-    return tuple(el for el in user_ratings if el.get("timestamp", 0) >= since_ms)
 
 
 def _resolve_workers(raw_workers):
@@ -146,7 +139,8 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     first_page, last_page = _parse_pages(args["--pages"])
-    since_ms = _parse_since(args["--since"])
+    raw_since = args["--since"]
+    since_ms = _parse_since(raw_since)
     workers = _resolve_workers(args["--workers"])
     pool = multiprocessing.Pool(processes=workers)
     try:
@@ -190,32 +184,28 @@ def main():
                     )
                 )
             )
-        user_ratings = tuple(itertools.chain.from_iterable(user_ratings_by_type))
-        total_movies = len(user_ratings)
-        logger.info(f"User {user} has {total_movies} rated titles...")
-        assert total_movies, "No rated titles available"
-        if since_ms is not None:
-            user_ratings = _filter_since(user_ratings, since_ms)
-            total_movies = len(user_ratings)
-            logger.info(
-                f"{total_movies} titles rated since {args['--since']} (inclusive)..."
-            )
-            if not total_movies:
-                logger.info("Nothing to export, finishing")
-                return
+        user_ratings = tuple(
+            el
+            for el in itertools.chain.from_iterable(user_ratings_by_type)
+            if el.get("timestamp", 0) >= since_ms
+        )
+        total_titles = len(user_ratings)
+        since_msg = "" if raw_since is None else f" since {raw_since}"
+        logger.info(f"User {user} has {total_titles} rated titles{since_msg}...")
+        assert total_titles, "No rated titles available"
         ids = tuple(el.get("entity") for el in user_ratings)
         logger.info("Fetching info about titles [2/4]...")
         global_info = tuple(
             json.loads(el)
             for el in tqdm.tqdm(
-                pool.imap_unordered(getter.get_global_info, ids), total=total_movies
+                pool.imap_unordered(getter.get_global_info, ids), total=total_titles
             )
         )
         logger.info("Fetching global rating for titles [3/4]...")
         global_rating = tuple(
             json.loads(el)
             for el in tqdm.tqdm(
-                pool.imap_unordered(getter.get_global_rating, ids), total=total_movies
+                pool.imap_unordered(getter.get_global_rating, ids), total=total_titles
             )
         )
         logger.info("Writing data [4/4]...")
