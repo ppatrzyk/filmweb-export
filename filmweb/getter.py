@@ -4,7 +4,7 @@ import requests
 
 HEADERS = {
     # https://www.whatismybrowser.com/guides/the-latest-user-agent/firefox
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:158.0) Gecko/20100101 Firefox/158.0",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:159.0) Gecko/20100101 Firefox/159.0",
     "Host": "www.filmweb.pl",
     "Referer": "https://www.filmweb.pl",
     "Accept": "*/*",

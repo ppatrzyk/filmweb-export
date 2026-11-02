@@ -21,7 +21,7 @@ Wymaga instalacji [Pythona](https://www.python.org/).
 podman run \
     --rm \
     -v ./:/filmweb \
-    ghcr.io/ppatrzyk/filmweb-export:v0.12 \
+    ghcr.io/ppatrzyk/filmweb-export:v0.13 \
     filmweb <username> <cookie>
 ```
 
