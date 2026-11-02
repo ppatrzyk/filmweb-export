@@ -55,6 +55,16 @@ filmweb --pages 3 <username> <cookie>     # tylko strona 3
 filmweb --pages 4- <username> <cookie>    # od strony 4 do końca
 ```
 
+### Przyrostowy eksport
+
+Opcja `--since YYYY-MM-DD` eksportuje tylko tytuły ocenione (lub ze zmienioną oceną) w podanym dniu lub później (dzień włącznie). Lista ocen jest nadal pobierana w całości, ale kosztowne zapytania o informacje i oceny globalne dotyczą wyłącznie wybranych tytułów, więc eksport od ostatniej daty trwa o wiele krócej:
+
+```bash
+filmweb --since 2026-10-19 <username> <cookie>
+```
+
+Dlaczego lista ocen jest pobierana w całości, a nie tylko do pierwszej starszej oceny? Filmweb zwraca oceny w stałej kolejności (domyślnie od najnowszej dodanej), ale pole `timestamp` to czas ostatniej zmiany oceny. Gdy zmienisz ocenę starego filmu, jego `timestamp` jest nowy, a pozycja na liście pozostaje zwykle na dawnym miejscu. Pobieranie od początku i przerwanie na pierwszej starej ocenie pominęłoby takie zmiany. Dodatkowo strony listy są pobierane równolegle, więc kolejność w pliku wynikowym nie jest chronologiczna.
+
 ### Skąd wziąć cookie?
 
  - [Network Monitor w przeglądarce](cookies_browser.md)
@@ -113,7 +123,7 @@ $ filmweb -h
 filmweb
 
 Usage:
-    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--debug] <username> <cookie>
+    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
@@ -122,6 +132,9 @@ Options:
     -w --workers=<n>              Number of parallel workers (default: CPU count)
     -p --pages=<range>            Fetch only given pages of ratings list (100 titles per page),
                                   e.g. 3 or 2-5 or 4- (default: all pages)
+    -s --since=<date>             Export only titles rated (or re-rated) on or after
+                                  given date, inclusive, format YYYY-MM-DD
+                                  (default: all titles)
     -d --debug                    Debug prints
 
 Source:
