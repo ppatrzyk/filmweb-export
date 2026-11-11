@@ -123,6 +123,7 @@ $ filmweb -h
 filmweb
 
 Usage:
+    filmweb details [--format=<fileformat>]... [--workers=<n>] [--debug] <id>...
     filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
 
 Options:
@@ -145,19 +146,25 @@ Source:
 
 Kolumna | Opis
 --- | ---
-year | _premiera_
-global\_rating\_count | _ilość ocen filmu_
-global\_rating | _ocena filmweb_
+movie\_id | _id filmu_ (filmweb)
 timestamp | _[czas oceny (unix)](https://pl.wikipedia.org/wiki/Czas_uniksowy)_
 date | _data oceny_ (yyyy-mm-dd)
-user\_rating | _ocena użytkownika_
 favorite | _dodany do ulubionych_
+user\_rating | _ocena użytkownika_
+global\_rating | _ocena filmweb_
+global\_rating\_count | _ilość ocen filmu_
+year | _premiera_
+duration | _czas trwania w minutach_
 original\_title | _tytuł oryginalny_
 pl\_title | _tytuł polski_
-movie\_id | _id filmu_ (filmweb)
 title\_type | _typ tytułu_ (movie, tv\_show, game)
 title\_sub\_type | _podtyp tytułu_ (np. serial\_tv, mini\_serial)
+plot | _opis_
 url | _strona filmu_
+poster\_url | _adres plakatu_
+genres | _gatunki_
+countries | _kraje produkcji_
+directors | _reżyserzy_
 
 ## DEV
 

@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 import requests
 
@@ -19,6 +20,7 @@ HEADERS = {
     "Sec-Fetch-Site": "same-origin",
     "Sec-GPC": "1",
     "TE": "trailers",
+    "x-locale": "pl-PL",
 }
 
 
@@ -33,6 +35,12 @@ def get_titles_page(args):
     else:
         url = f"https://www.filmweb.pl/api/v1/logged/vote/title/{title_type}?page={n}"
     data = _get_json(url, cookie, "get_titles_page")
+    for entry in data:
+        entry["movie_id"] = entry.get("entity")
+        entry["user_rating"] = entry.get("rate")
+        entry["date"] = datetime.fromtimestamp(entry["timestamp"] / 1000).strftime(
+            "%Y-%m-%d"
+        )
     return json.dumps(data)
 
 
@@ -57,24 +65,26 @@ def get_votes_count(user, title_type):
     return _get_json(url, "", "get_votes_count")
 
 
-def get_global_info(title_id):
-    """
-    Get info about a title (title etc)
-    """
-    url = f"https://www.filmweb.pl/api/v1/title/{title_id}/info"
-    data = _get_json(url, "", "get_global_info")
-    data["entity"] = title_id
-    return json.dumps(data)
-
-
 def get_global_rating(title_id):
     """
     Get global rating for a title
     """
     url = f"https://www.filmweb.pl/api/v1/film/{title_id}/rating"
     data = _get_json(url, "", "get_global_rating")
-    data["entity"] = title_id
-    data["global_rate"] = data.pop("rate")
+    data["movie_id"] = title_id
+    data["global_rating"] = data.pop("rate")
+    data["global_rating_count"] = data.pop("count")
+    # TODO vote histogram
+    return json.dumps(data)
+
+
+def get_details(title_id):
+    """
+    Get extended info about a title (genres, countries, poster etc.)
+    """
+    url = f"https://www.filmweb.pl/api/v1/film/{title_id}/preview"
+    data = _get_json(url, "", "get_details")
+    data["movie_id"] = title_id
     return json.dumps(data)
 
 
@@ -83,7 +93,8 @@ def _get_json(url, cookie, func_name):
     Wrapper for request and unified error
     """
     try:
-        response = requests.get(url, headers={"Cookie": cookie, **HEADERS})
+        headers = {"Cookie": cookie, **HEADERS}
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         content = response.json()
     except Exception as e:  # noqa
