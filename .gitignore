@@ -4,4 +4,5 @@ dist
 pyinstaller*
 **/filmweb.egg-info
 venv
+.ruff_cache
 .vscode
