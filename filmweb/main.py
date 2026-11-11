@@ -138,7 +138,7 @@ def _get_details(ids, pool):
     details = tuple(
         json.loads(el)
         for el in tqdm.tqdm(
-            pool.imap_unordered(getter.get_details, ids), total=len(ids)
+            pool.imap_unordered(getter.get_preview, ids), total=len(ids)
         )
     )
     details = tuple(parser.parse_details(d) for d in details)
@@ -153,12 +153,21 @@ def details(args, pool):
     assert formats and formats.issubset(supported_formats), (
         f"Supported file formats: {supported_formats}"
     )
-    logger.info("Fetching details...")
+    logger.info("Fetching info about titles [1/3]...")
     details = _get_details(ids, pool)
+    logger.info("Fetching global rating for titles [2/3]...")
+    global_rating = tuple(
+        json.loads(el)
+        for el in tqdm.tqdm(
+            pool.imap_unordered(getter.get_global_rating, ids), total=len(ids)
+        )
+    )
+    logger.info("Writing data [3/3]...")
     movies = parser.merge_data(
         ids,
         [
             details,
+            global_rating
         ],
     )
     parser.write_details(movies, formats)

@@ -20,13 +20,14 @@ DETAILS_KEYS = (
     "genres",
     "directors",
     "countries",
+    "global_rating",
+    "global_rating_count",
+    "global_rating_histogram",
 )
 USER_EXPORT_KEYS = DETAILS_KEYS + (
     "timestamp",
     "favorite",
     "user_rating",
-    "global_rating",
-    "global_rating_count",
 )
 POSTER_URL_PREFIX = "https://fwcdn.pl/fpo"
 POSTER_SIZE = 10  # size used by filmweb in the list of ratings

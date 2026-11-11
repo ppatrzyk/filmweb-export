@@ -153,6 +153,7 @@ favorite | _dodany do ulubionych_
 user\_rating | _ocena użytkownika_
 global\_rating | _ocena filmweb_
 global\_rating\_count | _ilość ocen filmu_
+global\_rating\_histogram | _rozkład ocen filmu_
 year | _premiera_
 duration | _czas trwania w minutach_
 original\_title | _tytuł oryginalny_

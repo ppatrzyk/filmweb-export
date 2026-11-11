@@ -72,18 +72,20 @@ def get_global_rating(title_id):
     url = f"https://www.filmweb.pl/api/v1/film/{title_id}/rating"
     data = _get_json(url, "", "get_global_rating")
     data["movie_id"] = title_id
-    data["global_rating"] = data.pop("rate")
-    data["global_rating_count"] = data.pop("count")
-    # TODO vote histogram
+    data["global_rating"] = data.get("rate")
+    data["global_rating_count"] = data.get("count")
+    data["global_rating_histogram"] = {
+        rating: data.get(f"countVote{rating}") for rating in range(1, 11)
+    }
     return json.dumps(data)
 
 
-def get_details(title_id):
+def get_preview(title_id):
     """
-    Get extended info about a title (genres, countries, poster etc.)
+    Get info about a title
     """
     url = f"https://www.filmweb.pl/api/v1/film/{title_id}/preview"
-    data = _get_json(url, "", "get_details")
+    data = _get_json(url, "", "get_preview")
     data["movie_id"] = title_id
     return json.dumps(data)
 
