@@ -1,12 +1,13 @@
 """filmweb
 
 Usage:
-    filmweb details [--format=<fileformat>]... [--workers=<n>] [--debug] <id>...
-    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
+    filmweb details [--format=<fileformat>]... [--stdout] [--workers=<n>] [--debug] <id>...
+    filmweb [--format=<fileformat>]... [--stdout] [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
     -f --format=<fileformat>      Output file format: json (default), csv, letterboxd
+    -o --stdout                   Print result to stdout instead of file
     -t --type=<titletype>         Title type: movie, tv_show, game (default: all)
     -w --workers=<n>              Number of parallel workers (default: CPU count)
     -p --pages=<range>            Fetch only given pages of ratings list (100 titles per page),
@@ -148,29 +149,22 @@ def _get_details(ids, pool):
 def details(args, pool):
     """Get extended info about titles with given ids"""
     ids = _parse_ids(args["<id>"])
-    formats = {f.lower() for f in (args["--format"] or ("json",))}
-    supported_formats = {"csv", "json"}
-    assert formats and formats.issubset(supported_formats), (
-        f"Supported file formats: {supported_formats}"
-    )
-    logger.info("Fetching info about titles [1/3]...")
+    logger.info("Fetching info about titles [1/2]...")
     details = _get_details(ids, pool)
-    logger.info("Fetching global rating for titles [2/3]...")
+    logger.info("Fetching global rating for titles [2/2]...")
     global_rating = tuple(
         json.loads(el)
         for el in tqdm.tqdm(
             pool.imap_unordered(getter.get_global_rating, ids), total=len(ids)
         )
     )
-    logger.info("Writing data [3/3]...")
-    movies = parser.merge_data(
+    return parser.merge_data(
         ids,
         [
             details,
             global_rating
         ],
     )
-    parser.write_details(movies, formats)
 
 
 def user_export(args, pool):
@@ -180,11 +174,6 @@ def user_export(args, pool):
     user = args["<username>"]
     cookie = args["<cookie>"]
     assert all([user, cookie]), "Empty arguments provided"
-    formats = {f.lower() for f in (args["--format"] or ("json",))}
-    supported_formats = {"csv", "json", "letterboxd"}
-    assert formats and formats.issubset(supported_formats), (
-        f"Supported file formats: {supported_formats}"
-    )
     title_types = _normalize_title_types(args["--type"])
     first_page, last_page = _parse_pages(args["--pages"])
     raw_since = args["--since"]
@@ -193,7 +182,7 @@ def user_export(args, pool):
     logged_in_user = getter.auth_check(cookie)
     friend_query = user != logged_in_user
     user_ratings_by_type = []
-    logger.info("Fetching list of rated titles [1/4]...")
+    logger.info("Fetching list of rated titles [1/3]...")
     for title_type in title_types:
         api_title_type = TITLE_TYPE_TO_API[title_type]
         votes_total = getter.get_votes_count(user, api_title_type)
@@ -236,18 +225,16 @@ def user_export(args, pool):
     logger.info(f"User {user} has {total_titles} rated titles{since_msg}...")
     assert total_titles, "No rated titles available"
     ids = tuple(el.get("movie_id") for el in user_ratings)
-    logger.info("Fetching info about titles [2/4]...")
+    logger.info("Fetching info about titles [2/3]...")
     details = _get_details(ids, pool)
-    logger.info("Fetching global rating for titles [3/4]...")
+    logger.info("Fetching global rating for titles [3/3]...")
     global_rating = tuple(
         json.loads(el)
         for el in tqdm.tqdm(
             pool.imap_unordered(getter.get_global_rating, ids), total=total_titles
         )
     )
-    logger.info("Writing data [4/4]...")
-    movies = parser.merge_data(ids, [user_ratings, details, global_rating])
-    parser.write_user_export(movies, user, formats)
+    return user, parser.merge_data(ids, [user_ratings, details, global_rating])
 
 
 def main():
@@ -259,10 +246,20 @@ def main():
     workers = _resolve_workers(args["--workers"])
     pool = multiprocessing.Pool(processes=workers)
     try:
+        formats = {f.lower() for f in (args["--format"] or ("json",))}
+        write_stdout = args["--stdout"]
+        if write_stdout:
+            assert len(formats) == 1, f"Only one format can be written to stdout, passed: {formats}"
+        supported_formats = {"csv", "json", "letterboxd"}
+        assert formats and formats.issubset(supported_formats), (
+            f"Supported file formats: {supported_formats}"
+        )
         if args["details"]:
-            details(args, pool)
+            movies = details(args, pool)
+            parser.write_details(movies, write_stdout, formats)
         else:
-            user_export(args, pool)
+            user, movies = user_export(args, pool)
+            parser.write_user_export(movies, user, write_stdout, formats)
     except Exception as e:  # noqa
         logger.error(f"Program error: {e!s}")
     finally:

@@ -33,10 +33,20 @@ Pobierz z zakładki [Releases](https://github.com/ppatrzyk/filmweb-export/releas
 
 ## Instrukcja
 
+### Dane użytkownika
+
 Istnieje możliwość eksportu własnych ocen lub ocen znajomych - proszę podać nazwę użytkownika jako `username`. Do dostępu jest potrzebne zalogowanie się na portal i podanie do skryptu wartości `cookie` dla strony filmweb. Podstawowe użycie:
 
 ```bash
 filmweb <username> <cookie>
+```
+
+### Dane o filmach
+
+Ściągnij dane o filmach według ich _id_ (nie wymaga logowania):
+
+```bash
+filmweb <id>
 ```
 
 ### Ograniczanie obciążenia serwera
@@ -71,6 +81,8 @@ Dlaczego lista ocen jest pobierana w całości, a nie tylko do pierwszej starsze
  - [Rozszerzenie cookie-editor](cookies_extension.md)
 
 ### Przykład
+
+#### Dane użytkownika
 
 ```bash
 $ filmweb -f csv -f json pieca "didomi_token=(...)=="
@@ -116,6 +128,89 @@ $ duckdb -box -c "SELECT * FROM read_csv_auto('pieca_20260604.csv') ORDER BY RAN
 
 ```
 
+#### Dowolne filmy
+
+```bash
+$ filmweb --stdout details 529 80 | jq
+INFO:filmweb.main:Fetching info about titles [1/2]...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  6.76it/s]
+INFO:filmweb.main:Fetching global rating for titles [2/2]...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  6.86it/s]
+INFO:filmweb.parser:Writing data...
+[
+  {
+    "movie_id": 529,
+    "duration": 104,
+    "poster_url": "https://fwcdn.pl/fpo/05/29/529/8160166.10.webp",
+    "pl_title": "Kiler",
+    "original_title": "Kiler",
+    "year": 1997,
+    "title_type": "movie",
+    "title_sub_type": "film_cinema",
+    "plot": "Jerzy Kiler, warszawski taksówkarz, przypadkowo zostaje wzięty za płatnego zabójcę i umieszczony w areszcie. Wyciąga go stamtąd boss świata przestępczego, który oferuje mu nowe zadanie.",
+    "genres": [
+      "Komedia",
+      "Sensacyjny"
+    ],
+    "directors": [
+      "Juliusz Machulski"
+    ],
+    "countries": [
+      "PL"
+    ],
+    "global_rating": 7.73682,
+    "global_rating_count": 471324,
+    "global_rating_histogram": {
+      "1": 1832,
+      "2": 1426,
+      "3": 3551,
+      "4": 6894,
+      "5": 15654,
+      "6": 40939,
+      "7": 109851,
+      "8": 160761,
+      "9": 79472,
+      "10": 50944
+    }
+  },
+  {
+    "movie_id": 80,
+    "duration": 113,
+    "poster_url": "https://fwcdn.pl/fpo/00/80/80/8023222_1.10.webp",
+    "pl_title": "Kiler-ów 2-óch",
+    "original_title": "Kiler-ów 2-óch",
+    "year": 1999,
+    "title_type": "movie",
+    "title_sub_type": "film_cinema",
+    "plot": "Jurek Kiler stał się sławną osobą, lecz gangsterzy, których oszukał, planują zemstę.\n",
+    "genres": [
+      "Komedia",
+      "Sensacyjny"
+    ],
+    "directors": [
+      "Juliusz Machulski"
+    ],
+    "countries": [
+      "PL"
+    ],
+    "global_rating": 7.2879,
+    "global_rating_count": 238399,
+    "global_rating_histogram": {
+      "1": 990,
+      "2": 953,
+      "3": 2935,
+      "4": 5672,
+      "5": 13875,
+      "6": 34054,
+      "7": 71860,
+      "8": 64421,
+      "9": 25437,
+      "10": 18202
+    }
+  }
+]
+```
+
 ### Wszystkie opcje
 
 ```bash
@@ -123,12 +218,13 @@ $ filmweb -h
 filmweb
 
 Usage:
-    filmweb details [--format=<fileformat>]... [--workers=<n>] [--debug] <id>...
-    filmweb [--format=<fileformat>]... [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
+    filmweb details [--format=<fileformat>]... [--stdout] [--workers=<n>] [--debug] <id>...
+    filmweb [--format=<fileformat>]... [--stdout] [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
 
 Options:
     -h --help                     Show this screen
     -f --format=<fileformat>      Output file format: json (default), csv, letterboxd
+    -o --stdout                   Print result to stdout instead of file
     -t --type=<titletype>         Title type: movie, tv_show, game (default: all)
     -w --workers=<n>              Number of parallel workers (default: CPU count)
     -p --pages=<range>            Fetch only given pages of ratings list (100 titles per page),

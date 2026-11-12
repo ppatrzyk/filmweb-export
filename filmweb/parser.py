@@ -1,6 +1,8 @@
 import csv
 import json
 import logging
+import sys
+from contextlib import nullcontext
 from datetime import datetime
 from urllib.parse import quote_plus
 
@@ -94,7 +96,7 @@ def _poster_url(path):
     return f"{POSTER_URL_PREFIX}{base.replace('$', str(POSTER_SIZE))}.webp"
 
 
-def _write_csv(file_name, field_names, movies):
+def _write_csv(file, field_names, movies):
     """
     Helper for writing csv
     """
@@ -105,11 +107,13 @@ def _write_csv(file_name, field_names, movies):
         }
         for movie in movies
     ]
-    with open(file_name, "w", encoding="utf-8") as out_file:
+    with (open(file, "w") if file is not None else nullcontext(sys.stdout)) as out_file:
         writer = csv.DictWriter(out_file, fieldnames=field_names, dialect="unix")
         writer.writeheader()
         for movie in movies_fixed:
             writer.writerow(movie)
+    if file is not None:
+        logger.info(f"{file} written!")
     return True
 
 
@@ -130,35 +134,38 @@ def _letterbox_entry(entry):
 def _write_data(movies, keys, file_name, formats):
     """Write export data to requested output formats"""
     assert movies, "no data to write"
+    logger.info("Writing data...")
     movies = [{k: v for k, v in m.items() if k in keys} for m in movies]
-    written_files = []
     if "json" in formats:
-        file = f"{file_name}.json"
-        with open(file, "w", encoding="utf-8") as out_file:
-            out_file.write(json.dumps(movies))
-        logger.info(f"{file} written!")
-        written_files.append(file)
+        raw_data = json.dumps(movies)
+        if file_name is None:
+            sys.stdout.write(raw_data)
+        else:
+            file = f"{file_name}.json"
+            with open(file, "w", encoding="utf-8") as out_file:
+                out_file.write(raw_data)
+            logger.info(f"{file} written!")
     if "csv" in formats:
-        file = f"{file_name}.csv"
+        file = f"{file_name}.csv" if file_name else file_name
         _write_csv(file, keys, movies)
-        logger.info(f"{file} written!")
-        written_files.append(file)
     if "letterboxd" in formats:
-        file = f"{file_name}_letterboxd.csv"
+        file = f"{file_name}_letterboxd.csv" if file_name else file_name
         movies_letterbox = tuple(_letterbox_entry(entry) for entry in movies)
         _write_csv(file, movies_letterbox[0].keys(), movies_letterbox)
-        logger.info(f"{file} written!")
-        written_files.append(file)
-    return tuple(written_files)
+    return True
 
 
-def write_details(movies, formats):
-    date = datetime.now().strftime("%Y%m%d")
-    file_name = f"details_{date}"
+def write_details(movies, write_stdout, formats):
+    file_name = None
+    if not write_stdout:
+        date = datetime.now().strftime("%Y%m%d")
+        file_name = f"details_{date}"
     return _write_data(movies, DETAILS_KEYS, file_name, formats)
 
 
-def write_user_export(movies, user, formats):
-    date = datetime.now().strftime("%Y%m%d")
-    file_name = f"{user}_{date}"
+def write_user_export(movies, user, write_stdout, formats):
+    file_name = None
+    if not write_stdout:
+        date = datetime.now().strftime("%Y%m%d")
+        file_name = f"{user}_{date}"
     return _write_data(movies, USER_EXPORT_KEYS, file_name, formats)
