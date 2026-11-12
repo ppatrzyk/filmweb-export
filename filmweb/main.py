@@ -26,115 +26,20 @@ import json
 import logging
 import multiprocessing
 import re
-from datetime import datetime
 from math import ceil
 
 import tqdm
 from docopt import docopt
 
-from . import getter, parser
+from . import getter, parser, writer
 
 logger = logging.getLogger(__name__)
 
 CPU_COUNT = multiprocessing.cpu_count()
 MOVIES_PER_PAGE = 100
-DEFAULT_TITLE_TYPES = ("movie", "tv_show", "game")
-TITLE_TYPE_TO_API = {"movie": "film", "tv_show": "serial", "game": "videogame"}
-TITLE_TYPE_ALIASES = {
-    "film": "movie",
-    "films": "movie",
-    "movie": "movie",
-    "movies": "movie",
-    "serial": "tv_show",
-    "series": "tv_show",
-    "show": "tv_show",
-    "shows": "tv_show",
-    "tv": "tv_show",
-    "tvshow": "tv_show",
-    "tvshows": "tv_show",
-    "tv_show": "tv_show",
-    "tv_shows": "tv_show",
-    "gra": "game",
-    "gry": "game",
-    "videogame": "game",
-    "videogames": "game",
-    "game": "game",
-    "games": "game",
-}
 
 
-def _normalize_title_types(raw_types):
-    """Normalize user title type values to supported API types"""
-    normalized = []
-    seen = set()
-    for title_type in raw_types or DEFAULT_TITLE_TYPES:
-        key = title_type.lower().strip()
-        resolved_types = (
-            DEFAULT_TITLE_TYPES if key == "all" else (TITLE_TYPE_ALIASES.get(key),)
-        )
-        assert all(resolved_types), f"Unsupported title type: {title_type}"
-        for resolved in resolved_types:
-            if resolved not in seen:
-                normalized.append(resolved)
-                seen.add(resolved)
-    return tuple(normalized)
-
-
-def _parse_pages(raw_pages):
-    """Parse --pages value into (first, last) tuple, last=None means 'to the end'"""
-    if raw_pages is None:
-        return (1, None)
-    match = re.fullmatch(r"\s*(\d+)\s*(-\s*(\d*))?\s*", raw_pages)
-    assert match, f"--pages must look like 3, 2-5 or 4-, got: {raw_pages}"
-    first = int(match.group(1))
-    if match.group(2) is None:
-        last = first
-    else:
-        last = int(match.group(3)) if match.group(3) else None
-    assert first >= 1, "--pages must start at page 1 or later"
-    assert last is None or last >= first, (
-        "--pages range end must not be lower than its start"
-    )
-    return (first, last)
-
-
-def _parse_since(raw_since):
-    """
-    Parse --since value (YYYY-MM-DD) into timestamp in ms, None means 'no limit'.
-    The day is inclusive: the limit is local midnight, the same timezone
-    that is used for the `date` column in the output.
-    """
-    if raw_since is None:
-        return 0
-    try:
-        since = datetime.strptime(raw_since.strip(), "%Y-%m-%d")
-    except ValueError:
-        raise AssertionError(f"--since must look like 2026-10-19, got: {raw_since}")
-    return int(since.timestamp() * 1000)
-
-
-def _resolve_workers(raw_workers):
-    """Number of parallel workers: CPU count by default"""
-    if raw_workers is None:
-        return CPU_COUNT
-    try:
-        workers = int(raw_workers)
-        assert workers >= 1, "--workers must be at least 1"
-        if workers > CPU_COUNT:
-            logger.warning(f"--workers={workers} exceeds CPU count ({CPU_COUNT})")
-        return workers
-    except ValueError:
-        raise AssertionError(f"--workers must be positive integer, got: {raw_workers}")
-
-
-def _parse_ids(raw_ids):
-    """Parse title ids given to details command, drop duplicates, keep order"""
-    for raw_id in raw_ids:
-        assert raw_id.isdigit(), f"Title id must be a number, got: {raw_id}"
-    return tuple(dict.fromkeys(int(raw_id) for raw_id in raw_ids))
-
-
-def _get_details(ids, pool):
+def _get_details(ids: tuple[int], pool: multiprocessing.Pool):
     """Fetch details for given ids"""
     details = tuple(
         json.loads(el)
@@ -146,9 +51,9 @@ def _get_details(ids, pool):
     return details
 
 
-def details(args, pool):
+def details(args: dict, pool: multiprocessing.Pool):
     """Get extended info about titles with given ids"""
-    ids = _parse_ids(args["<id>"])
+    ids = parser.parse_ids(args["<id>"])
     logger.info("Fetching info about titles [1/2]...")
     details = _get_details(ids, pool)
     logger.info("Fetching global rating for titles [2/2]...")
@@ -160,32 +65,28 @@ def details(args, pool):
     )
     return parser.merge_data(
         ids,
-        [
-            details,
-            global_rating
-        ],
+        [details, global_rating],
     )
 
 
-def user_export(args, pool):
+def user_export(args: dict, pool: multiprocessing.Pool):
     """
     Export user data
     """
     user = args["<username>"]
     cookie = args["<cookie>"]
     assert all([user, cookie]), "Empty arguments provided"
-    title_types = _normalize_title_types(args["--type"])
-    first_page, last_page = _parse_pages(args["--pages"])
+    title_types = parser.normalize_title_types(args["--type"])
+    first_page, last_page = parser.parse_pages(args["--pages"])
     raw_since = args["--since"]
-    since_ms = _parse_since(raw_since)
+    since_ms = parser.parse_since(raw_since)
     cookie = re.sub("Cookie:", "", cookie).strip()
     logged_in_user = getter.auth_check(cookie)
     friend_query = user != logged_in_user
     user_ratings_by_type = []
     logger.info("Fetching list of rated titles [1/3]...")
     for title_type in title_types:
-        api_title_type = TITLE_TYPE_TO_API[title_type]
-        votes_total = getter.get_votes_count(user, api_title_type)
+        votes_total = getter.get_votes_count(user, title_type)
         pages = ceil(votes_total / MOVIES_PER_PAGE)
         if pages == 0:
             logger.info(f"Skipping {title_type}, no ratings found")
@@ -201,7 +102,7 @@ def user_export(args, pool):
             f"Fetching list of {title_type} ratings (pages {first_page}-{end_page} of {pages})..."
         )
         get_titles_page_args = (
-            (cookie, user, friend_query, api_title_type, page)
+            (cookie, user, friend_query, title_type, page)
             for page in range(first_page, end_page + 1)
         )
         user_ratings_raw = tuple(
@@ -243,23 +144,25 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
-    workers = _resolve_workers(args["--workers"])
+    workers = parser.resolve_workers(args["--workers"], CPU_COUNT)
     pool = multiprocessing.Pool(processes=workers)
     try:
         formats = {f.lower() for f in (args["--format"] or ("json",))}
         write_stdout = args["--stdout"]
         if write_stdout:
-            assert len(formats) == 1, f"Only one format can be written to stdout, passed: {formats}"
+            assert len(formats) == 1, (
+                f"Only one format can be written to stdout, passed: {formats}"
+            )
         supported_formats = {"csv", "json", "letterboxd"}
         assert formats and formats.issubset(supported_formats), (
             f"Supported file formats: {supported_formats}"
         )
         if args["details"]:
             movies = details(args, pool)
-            parser.write_details(movies, write_stdout, formats)
+            writer.write_details(movies, write_stdout, formats)
         else:
             user, movies = user_export(args, pool)
-            parser.write_user_export(movies, user, write_stdout, formats)
+            writer.write_user_export(movies, user, write_stdout, formats)
     except Exception as e:  # noqa
         logger.error(f"Program error: {e!s}")
     finally:

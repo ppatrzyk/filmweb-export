@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from typing import Any
 
 import requests
 
@@ -24,7 +25,7 @@ HEADERS = {
 }
 
 
-def get_titles_page(args):
+def get_titles_page(args: dict) -> str:
     """
     request title page
     """
@@ -44,7 +45,7 @@ def get_titles_page(args):
     return json.dumps(data)
 
 
-def auth_check(cookie):
+def auth_check(cookie: str) -> str:
     """
     Check if auth is OK (valid cookie after login)
     """
@@ -54,7 +55,7 @@ def auth_check(cookie):
     return user
 
 
-def get_votes_count(user, title_type):
+def get_votes_count(user: str, title_type: str) -> Any:
     """
     Get total count of user votes for one title type: https://www.filmweb.pl/api/v1/user/{user}/votes/{title_type}/count
         Args:
@@ -65,7 +66,7 @@ def get_votes_count(user, title_type):
     return _get_json(url, "", "get_votes_count")
 
 
-def get_global_rating(title_id):
+def get_global_rating(title_id: int) -> str:
     """
     Get global rating for a title
     """
@@ -80,7 +81,7 @@ def get_global_rating(title_id):
     return json.dumps(data)
 
 
-def get_preview(title_id):
+def get_preview(title_id: int) -> str:
     """
     Get info about a title
     """
@@ -90,7 +91,7 @@ def get_preview(title_id):
     return json.dumps(data)
 
 
-def _get_json(url, cookie, func_name):
+def _get_json(url: str, cookie: str, func_name: str) -> Any:
     """
     Wrapper for request and unified error
     """

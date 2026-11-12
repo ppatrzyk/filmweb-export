@@ -1,41 +1,83 @@
-import csv
-import json
 import logging
-import sys
-from contextlib import nullcontext
+import re
 from datetime import datetime
 from urllib.parse import quote_plus
 
 logger = logging.getLogger(__name__)
 
-TITLE_TYPE_OUTPUT_MAPPING = {"film": "movie", "serial": "tv_show", "videogame": "game"}
-DETAILS_KEYS = (
-    "movie_id",
-    "duration",
-    "poster_url",
-    "pl_title",
-    "original_title",
-    "year",
-    "title_type",
-    "title_sub_type",
-    "plot",
-    "genres",
-    "directors",
-    "countries",
-    "global_rating",
-    "global_rating_count",
-    "global_rating_histogram",
-)
-USER_EXPORT_KEYS = DETAILS_KEYS + (
-    "timestamp",
-    "favorite",
-    "user_rating",
-)
 POSTER_URL_PREFIX = "https://fwcdn.pl/fpo"
 POSTER_SIZE = 10  # size used by filmweb in the list of ratings
+DEFAULT_TITLE_TYPES = {"movie", "tv_show", "game"}
+TITLE_TYPE_ALIASES = {
+    "film": "movie",
+    "films": "movie",
+    "movie": "movie",
+    "movies": "movie",
+    "serial": "tv_show",
+    "series": "tv_show",
+    "show": "tv_show",
+    "shows": "tv_show",
+    "tv": "tv_show",
+    "tvshow": "tv_show",
+    "tvshows": "tv_show",
+    "tv_show": "tv_show",
+    "tv_shows": "tv_show",
+    "gra": "game",
+    "gry": "game",
+    "videogame": "game",
+    "videogames": "game",
+    "game": "game",
+    "games": "game",
+}
+TITLE_TYPE_TO_API = {"movie": "film", "tv_show": "serial", "game": "videogame"}
+TITLE_TYPE_OUTPUT_MAPPING = {"film": "movie", "serial": "tv_show", "videogame": "game"}
 
 
-def parse_details(entry):
+def _movie_id_key(data: list[dict]):
+    """
+    Parse and reformat data into dict with movie_id as key
+    """
+    return {entry["movie_id"]: entry for entry in data}
+
+
+def _poster_url(path: str | None) -> str | None:
+    """
+    Build url of poster image from api path, e.g.
+    /39/15/643915/7889447_1.$.jpg -> https://fwcdn.pl/fpo/39/15/643915/7889447_1.10.webp
+    """
+    if not path:
+        return None
+    base = path.rpartition(".")[0]
+    return f"{POSTER_URL_PREFIX}{base.replace('$', str(POSTER_SIZE))}.webp"
+
+
+def merge_data(ids: tuple[int], data: list[list[dict]]) -> tuple[dict]:
+    """
+    Merge all data into one
+    """
+    dicts = tuple(_movie_id_key(el) for el in data)
+    merged = tuple({**d.get(movie_id, {}) for d in dicts} for movie_id in ids)
+    return merged
+
+
+def normalize_title_types(raw_types: list[str]) -> tuple[str]:
+    """Normalize user title type values to supported API types"""
+    if not raw_types:
+        title_types = DEFAULT_TITLE_TYPES
+    else:
+        raw_types = [title_type.lower().strip() for title_type in raw_types]
+        if "all" in raw_types:
+            title_types = DEFAULT_TITLE_TYPES
+        else:
+            title_types = set()
+            for title_type in raw_types:
+                resolved = TITLE_TYPE_ALIASES.get(title_type, None)
+                assert resolved is not None, f"Unsupported title type: {title_type}"
+                title_types.add(resolved)
+    return tuple(TITLE_TYPE_TO_API[t] for t in title_types)
+
+
+def parse_details(entry: dict):
     """
     Parse response of film preview api into title info
     """
@@ -69,103 +111,55 @@ def parse_details(entry):
     return fixed
 
 
-def _movie_id_key(data):
+def parse_pages(raw_pages: str) -> tuple[int, int]:
+    """Parse --pages value into (first, last) tuple, last=None means 'to the end'"""
+    if raw_pages is None:
+        return (1, None)
+    match = re.fullmatch(r"\s*(\d+)\s*(-\s*(\d*))?\s*", raw_pages)
+    assert match, f"--pages must look like 3, 2-5 or 4-, got: {raw_pages}"
+    first = int(match.group(1))
+    if match.group(2) is None:
+        last = first
+    else:
+        last = int(match.group(3)) if match.group(3) else None
+    assert first >= 1, "--pages must start at page 1 or later"
+    assert last is None or last >= first, (
+        "--pages range end must not be lower than its start"
+    )
+    return (first, last)
+
+
+def parse_since(raw_since: str) -> int:
     """
-    Parse and reformat data into dict with movie_id as key
+    Parse --since value (YYYY-MM-DD) into timestamp in ms, None means 'no limit'.
+    The day is inclusive: the limit is local midnight, the same timezone
+    that is used for the `date` column in the output.
     """
-    return {entry["movie_id"]: entry for entry in data}
+    if raw_since is None:
+        return 0
+    try:
+        since = datetime.strptime(raw_since.strip(), "%Y-%m-%d")
+    except ValueError:
+        raise AssertionError(f"--since must look like 2026-10-19, got: {raw_since}")
+    return int(since.timestamp() * 1000)
 
 
-def merge_data(ids, data):
-    """
-    Merge all data into one
-    """
-    dicts = tuple(_movie_id_key(el) for el in data)
-    merged = ({**d.get(movie_id, {}) for d in dicts} for movie_id in ids)
-    return merged
+def resolve_workers(raw_workers: str, default: int) -> int:
+    """Number of parallel workers: CPU count by default"""
+    if raw_workers is None:
+        return default
+    try:
+        workers = int(raw_workers)
+        assert workers >= 1, "--workers must be at least 1"
+        if workers > default:
+            logger.warning(f"--workers={workers} exceeds default CPU count ({default})")
+        return workers
+    except ValueError:
+        raise AssertionError(f"--workers must be positive integer, got: {raw_workers}")
 
 
-def _poster_url(path):
-    """
-    Build url of poster image from api path, e.g.
-    /39/15/643915/7889447_1.$.jpg -> https://fwcdn.pl/fpo/39/15/643915/7889447_1.10.webp
-    """
-    if not path:
-        return None
-    base = path.rpartition(".")[0]
-    return f"{POSTER_URL_PREFIX}{base.replace('$', str(POSTER_SIZE))}.webp"
-
-
-def _write_csv(file, field_names, movies):
-    """
-    Helper for writing csv
-    """
-    movies_fixed = [
-        {
-            k: (json.dumps(v) if isinstance(v, (list, dict)) else v)
-            for k, v in movie.items()
-        }
-        for movie in movies
-    ]
-    with (open(file, "w") if file is not None else nullcontext(sys.stdout)) as out_file:
-        writer = csv.DictWriter(out_file, fieldnames=field_names, dialect="unix")
-        writer.writeheader()
-        for movie in movies_fixed:
-            writer.writerow(movie)
-    if file is not None:
-        logger.info(f"{file} written!")
-    return True
-
-
-def _letterbox_entry(entry):
-    """
-    Format letterboxd column names
-    https://letterboxd.com/about/importing-data/
-    """
-    fixed = {
-        "Title": entry.get("original_title"),
-        "Year": entry.get("year"),
-        "Rating10": entry.get("user_rating"),
-        "WatchedDate": entry.get("date"),
-    }
-    return fixed
-
-
-def _write_data(movies, keys, file_name, formats):
-    """Write export data to requested output formats"""
-    assert movies, "no data to write"
-    logger.info("Writing data...")
-    movies = [{k: v for k, v in m.items() if k in keys} for m in movies]
-    if "json" in formats:
-        raw_data = json.dumps(movies)
-        if file_name is None:
-            sys.stdout.write(raw_data)
-        else:
-            file = f"{file_name}.json"
-            with open(file, "w", encoding="utf-8") as out_file:
-                out_file.write(raw_data)
-            logger.info(f"{file} written!")
-    if "csv" in formats:
-        file = f"{file_name}.csv" if file_name else file_name
-        _write_csv(file, keys, movies)
-    if "letterboxd" in formats:
-        file = f"{file_name}_letterboxd.csv" if file_name else file_name
-        movies_letterbox = tuple(_letterbox_entry(entry) for entry in movies)
-        _write_csv(file, movies_letterbox[0].keys(), movies_letterbox)
-    return True
-
-
-def write_details(movies, write_stdout, formats):
-    file_name = None
-    if not write_stdout:
-        date = datetime.now().strftime("%Y%m%d")
-        file_name = f"details_{date}"
-    return _write_data(movies, DETAILS_KEYS, file_name, formats)
-
-
-def write_user_export(movies, user, write_stdout, formats):
-    file_name = None
-    if not write_stdout:
-        date = datetime.now().strftime("%Y%m%d")
-        file_name = f"{user}_{date}"
-    return _write_data(movies, USER_EXPORT_KEYS, file_name, formats)
+def parse_ids(raw_ids: list[str]) -> tuple[int]:
+    """Parse title ids given to details command, drop duplicates, keep order"""
+    for raw_id in raw_ids:
+        assert raw_id.isdigit(), f"Title id must be a number, got: {raw_id}"
+    return tuple(dict.fromkeys(int(raw_id) for raw_id in raw_ids))

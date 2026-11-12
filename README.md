@@ -85,46 +85,67 @@ Dlaczego lista ocen jest pobierana w całości, a nie tylko do pierwszej starsze
 #### Dane użytkownika
 
 ```bash
-$ filmweb -f csv -f json pieca "didomi_token=(...)=="
-INFO:root:Checking args...
-INFO:root:Fetching list of rated titles [1/4]...
-INFO:root:Fetching list of movie ratings...
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:00<00:00, 43.70it/s]
-INFO:root:Fetching list of tv_show ratings...
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 10.30it/s]
-INFO:root:Skipping game, no ratings found
-INFO:root:User pieca has 955 rated titles...
-INFO:root:Fetching info about titles [2/4]...
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 955/955 [01:02<00:00, 15.21it/s]
-INFO:root:Fetching global rating for titles [3/4]...
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 955/955 [01:15<00:00, 12.72it/s]
-INFO:root:Writing data [4/4]...
-INFO:root:pieca_20260604.json written!
-INFO:root:pieca_20260604.csv written!
-$ cat pieca_20260604.json | jq .[0]
+$ filmweb -f csv -f json -s 2021-01-01 pieca "didomi_token=(...)=="
+INFO:filmweb.main:Fetching list of rated titles [1/3]...
+INFO:filmweb.main:Skipping videogame, no ratings found
+INFO:filmweb.main:Fetching list of serial ratings (pages 1-1 of 1)...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  2.82it/s]
+INFO:filmweb.main:Fetching list of film ratings (pages 1-10 of 10)...
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:00<00:00, 15.31it/s]
+INFO:filmweb.main:User pieca has 225 rated titles since 2021-01-01...
+INFO:filmweb.main:Fetching info about titles [2/3]...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 225/225 [00:12<00:00, 17.53it/s]
+INFO:filmweb.main:Fetching global rating for titles [3/3]...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 225/225 [00:10<00:00, 20.82it/s]
+INFO:filmweb.writer:Writing data...
+INFO:filmweb.writer:pieca_20261112.json written!
+INFO:filmweb.writer:pieca_20261112.csv written!
+$ cat pieca_20261112.json | jq .[0]
 {
-  "timestamp": 1579354599456,
-  "favorite": null,
-  "user_rating": 5,
-  "global_rating": 6.03865,
-  "global_rating_count": 414,
-  "original_title": "Ejdeha Vared Mishavad!",
-  "pl_title": "Wejście smoka!",
-  "year": 2016,
-  "movie_id": "757318",
-  "title_type": "movie",
-  "title_sub_type": "film_cinema",
-  "url": "https://www.filmweb.pl/film/Wej%C5%9Bcie+smoka%21-2016-757318",
-  "date": "2020-01-18"
+  "timestamp": 1743336683045,
+  "movie_id": 10074202,
+  "user_rating": 6,
+  "duration": 57,
+  "poster_url": "https://fwcdn.pl/fpo/42/02/10074202/8168022.10.webp",
+  "pl_title": "Dojrzewanie",
+  "original_title": "Adolescence",
+  "year": 2025,
+  "title_type": "tv_show",
+  "title_sub_type": "serial_tv",
+  "plot": "Trzynastolatek zostaje oskarżony o morderstwo koleżanki z klasy. Jego rodzina, terapeutka i prowadzący sprawę detektyw zadają sobie pytanie o to, co naprawdę się stało.",
+  "genres": [
+    "Dramat",
+    "Psychologiczny",
+    "Kryminał"
+  ],
+  "directors": [
+    "Philip Barantini"
+  ],
+  "countries": [
+    "GB"
+  ],
+  "url": "https://www.filmweb.pl/film/Dojrzewanie-2025-10074202",
+  "global_rating": 7.69396,
+  "global_rating_count": 97248,
+  "global_rating_histogram": {
+    "1": 460,
+    "2": 263,
+    "3": 818,
+    "4": 1168,
+    "5": 3649,
+    "6": 8364,
+    "7": 21015,
+    "8": 35316,
+    "9": 19902,
+    "10": 6293
+  }
 }
-$ duckdb -box -c "SELECT * FROM read_csv_auto('pieca_20260604.csv') ORDER BY RANDOM() LIMIT 3;"
-┌───────────────┬──────────┬─────────────┬───────────────┬─────────────────────┬─────────────────┬─────────────────┬──────┬──────────┬────────────┬────────────────┬────────────────────────────────────────────────────────────────────┬────────────┐
-│   timestamp   │ favorite │ user_rating │ global_rating │ global_rating_count │ original_title  │    pl_title     │ year │ movie_id │ title_type │ title_sub_type │                                url                                 │    date    │
-├───────────────┼──────────┼─────────────┼───────────────┼─────────────────────┼─────────────────┼─────────────────┼──────┼──────────┼────────────┼────────────────┼────────────────────────────────────────────────────────────────────┼────────────┤
-│ 1552236606975 │ NULL     │ 7           │ 6.60002       │ 25576               │ Force Majeure   │ Turysta         │ 2014 │ 709434   │ movie      │ film_cinema    │ https://www.filmweb.pl/film/Turysta-2014-709434                    │ 2019-03-10 │
-│ 1638616857444 │ NULL     │ 5           │ 7.27418       │ 60056               │ Pogoda na jutro │ Pogoda na jutro │ 2003 │ 39495    │ movie      │ film_cinema    │ https://www.filmweb.pl/film/Pogoda+na+jutro-2003-39495             │ 2021-12-04 │
-│ 1638614791800 │ NULL     │ 6           │ 7.69933       │ 51552               │ Żółty szalik    │ Żółty szalik    │ 2000 │ 32453    │ movie      │ film_tv        │ https://www.filmweb.pl/film/%C5%BB%C3%B3%C5%82ty+szalik-2000-32453 │ 2021-12-04 │
-└───────────────┴──────────┴─────────────┴───────────────┴─────────────────────┴─────────────────┴─────────────────┴──────┴──────────┴────────────┴────────────────┴────────────────────────────────────────────────────────────────────┴────────────┘
+$ duckdb -box -c "SELECT * FROM read_csv_auto('pieca_20261112.csv') ORDER BY RANDOM() LIMIT 1;"
+┌──────────┬──────────┬────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┬───────────────────┬───────────────────┬──────┬────────────┬────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────┬──────────────────────┬──────────────┬───────────────┬─────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────┬──────────┬─────────────┐
+│ movie_id │ duration │                              url                               │                     poster_url                      │     pl_title      │  original_title   │ year │ title_type │ title_sub_type │                                                                  plot                                                                  │        genres         │      directors       │  countries   │ global_rating │ global_rating_count │                                         global_rating_histogram                                         │   timestamp   │ favorite │ user_rating │
+├──────────┼──────────┼────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────┼───────────────────┼───────────────────┼──────┼────────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────┼──────────────────────┼──────────────┼───────────────┼─────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────┼──────────┼─────────────┤
+│ 857607   │ 98       │ https://www.filmweb.pl/film/Jak+najdalej+st%C4%85d-2020-857607 │ https://fwcdn.pl/fpo/76/07/857607/7930660_2.10.webp │ Jak najdalej stąd │ Jak najdalej stąd │ 2020 │ movie      │ film_cinema    │ Zbuntowana nastolatka, której ojciec zginął w wypadku na budowie, musi sama pojechać do Irlandii, aby sprowadzić ciało taty do Polski. │ ["Dramat", "Komedia"] │ ["Piotr Domalewski"] │ ["IE", "PL"] │ 6.81045       │ 20564               │ {"1": 36, "2": 34, "3": 131, "4": 324, "5": 1427, "6": 4895, "7": 9006, "8": 3921, "9": 558, "10": 232} │ 1638219848669 │ NULL     │ 8           │
+└──────────┴──────────┴────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┴───────────────────┴───────────────────┴──────┴────────────┴────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴───────────────────────┴──────────────────────┴──────────────┴───────────────┴─────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────┴───────────────┴──────────┴─────────────┘
 
 ```
 
@@ -158,6 +179,7 @@ INFO:filmweb.parser:Writing data...
     "countries": [
       "PL"
     ],
+    "url": "https://www.filmweb.pl/film/Kiler-1997-529",
     "global_rating": 7.73682,
     "global_rating_count": 471324,
     "global_rating_histogram": {
@@ -193,6 +215,7 @@ INFO:filmweb.parser:Writing data...
     "countries": [
       "PL"
     ],
+    "url": "https://www.filmweb.pl/film/Kiler-%C3%B3w+2-%C3%B3ch-1999-80",
     "global_rating": 7.2879,
     "global_rating_count": 238399,
     "global_rating_histogram": {
