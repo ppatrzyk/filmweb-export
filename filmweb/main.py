@@ -77,7 +77,7 @@ def search(args: dict, pool: multiprocessing.Pool):
     assert query, "Empty search query"
     title_types = parser.normalize_title_types(args["--type"])
     first_page, last_page = parser.parse_pages(args["--pages"])
-    logger.info(f"Searching for '{query}' [1/2]...")
+    logger.info(f"Searching for '{query}'...")
     search_results = []
     for title_type in title_types:
         results_total = getter.search_check_total(query=query, title_type=title_type)

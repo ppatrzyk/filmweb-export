@@ -96,6 +96,7 @@ def parse_details(entry: dict):
         ],
         "directors": [director.get("name") for director in entry.get("directors", [])],
         "countries": [country.get("code") for country in entry.get("countries", [])],
+        "actors": [actor.get("name") for actor in entry.get("mainCast", [])],
     }
     fixed["title_type"] = TITLE_TYPE_OUTPUT_MAPPING.get(
         fixed.get("title_type"), fixed.get("title_type")
@@ -171,4 +172,5 @@ def parse_search_entry(entry: dict) -> dict:
         "type": TITLE_TYPE_OUTPUT_MAPPING.get(entry.get("type"), entry.get("type")),
         "matched_title": entry.get("matchedTitle"),
         "matched_lang": entry.get("matchedLang"),
+        "actors": [actor.get("name") for actor in entry.get("filmMainCast", [])],
     }

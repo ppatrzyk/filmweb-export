@@ -22,6 +22,7 @@ DETAILS_KEYS = (
     "genres",
     "directors",
     "countries",
+    "actors",
     "global_rating",
     "global_rating_count",
     "global_rating_histogram",
@@ -36,6 +37,7 @@ SEARCH_KEYS = (
     "type",
     "matched_title",
     "matched_lang",
+    "actors",
 )
 
 

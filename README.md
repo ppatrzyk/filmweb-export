@@ -162,10 +162,10 @@ $ duckdb -box -c "SELECT * FROM read_csv_auto('pieca_20261112.csv') ORDER BY RAN
 ```bash
 $ filmweb --stdout details 529 80 | jq
 INFO:filmweb.main:Fetching info about titles [1/2]...
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  6.76it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  6.07it/s]
 INFO:filmweb.main:Fetching global rating for titles [2/2]...
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  6.86it/s]
-INFO:filmweb.parser:Writing data...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  6.52it/s]
+INFO:filmweb.writer:Writing data...
 [
   {
     "movie_id": 529,
@@ -187,20 +187,24 @@ INFO:filmweb.parser:Writing data...
     "countries": [
       "PL"
     ],
+    "actors": [
+      "Cezary Pazura",
+      "Małgorzata Kożuchowska"
+    ],
     "url": "https://www.filmweb.pl/film/Kiler-1997-529",
-    "global_rating": 7.73682,
-    "global_rating_count": 471324,
+    "global_rating": 7.73684,
+    "global_rating_count": 471332,
     "global_rating_histogram": {
       "1": 1832,
-      "2": 1426,
-      "3": 3551,
+      "2": 1425,
+      "3": 3552,
       "4": 6894,
       "5": 15654,
-      "6": 40939,
+      "6": 40940,
       "7": 109851,
-      "8": 160761,
-      "9": 79472,
-      "10": 50944
+      "8": 160764,
+      "9": 79473,
+      "10": 50947
     }
   },
   {
@@ -214,8 +218,8 @@ INFO:filmweb.parser:Writing data...
     "title_sub_type": "film_cinema",
     "plot": "Jurek Kiler stał się sławną osobą, lecz gangsterzy, których oszukał, planują zemstę.\n",
     "genres": [
-      "Komedia",
-      "Sensacyjny"
+      "Sensacyjny",
+      "Komedia"
     ],
     "directors": [
       "Juliusz Machulski"
@@ -223,20 +227,24 @@ INFO:filmweb.parser:Writing data...
     "countries": [
       "PL"
     ],
+    "actors": [
+      "Cezary Pazura",
+      "Janusz Rewiński"
+    ],
     "url": "https://www.filmweb.pl/film/Kiler-%C3%B3w+2-%C3%B3ch-1999-80",
-    "global_rating": 7.2879,
-    "global_rating_count": 238399,
+    "global_rating": 7.28797,
+    "global_rating_count": 238401,
     "global_rating_histogram": {
-      "1": 990,
+      "1": 989,
       "2": 953,
-      "3": 2935,
-      "4": 5672,
+      "3": 2936,
+      "4": 5671,
       "5": 13875,
-      "6": 34054,
-      "7": 71860,
-      "8": 64421,
-      "9": 25437,
-      "10": 18202
+      "6": 34051,
+      "7": 71862,
+      "8": 64422,
+      "9": 25438,
+      "10": 18204
     }
   }
 ]
@@ -246,28 +254,40 @@ INFO:filmweb.parser:Writing data...
 
 ```bash
 $ filmweb search --stdout --type film wściekłe pięści węża | jq
-INFO:filmweb.main:Searching for 'wściekłe pięści węża' [1/2]...
+INFO:filmweb.main:Searching for 'wściekłe pięści węża'...
 INFO:filmweb.main:Fetching search results for film (pages 1-1 of 1)...
-100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  1.03it/s]
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  3.68it/s]
 INFO:filmweb.writer:Writing data...
 [
   {
     "movie_id": 389424,
     "type": "movie",
     "matched_title": "Wściekłe pięści węża 2",
-    "matched_lang": "pl-PL"
+    "matched_lang": "pl-PL",
+    "actors": [
+      "Łukasz Walaszek",
+      "Dr Yry"
+    ]
   },
   {
     "movie_id": 311861,
     "type": "movie",
     "matched_title": "Wściekłe pięści Węża",
-    "matched_lang": "pl-PL"
+    "matched_lang": "pl-PL",
+    "actors": [
+      "Monika Szczęk",
+      "Mirosław Jędras"
+    ]
   },
   {
     "movie_id": 704550,
     "type": "movie",
     "matched_title": "Wściekłe pięści Węża 3",
-    "matched_lang": "pl-PL"
+    "matched_lang": "pl-PL",
+    "actors": [
+      "Bartosz Walaszek",
+      "Grzegorz Zacharjasiewicz"
+    ]
   }
 ]
 ```
@@ -324,6 +344,7 @@ poster\_url | _adres plakatu_
 genres | _gatunki_
 countries | _kraje produkcji_
 directors | _reżyserzy_
+actors | _aktorzy_
 
 ## DEV
 
