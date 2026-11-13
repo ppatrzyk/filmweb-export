@@ -134,10 +134,10 @@ def user_export(args: dict, pool: multiprocessing.Pool):
     logger.info("Fetching list of rated titles [1/3]...")
     for title_type in title_types:
         votes_total = getter.get_votes_count(user, title_type)
-        pages = ceil(votes_total / MOVIES_PER_PAGE)
-        if pages == 0:
+        if votes_total == 0:
             logger.info(f"Skipping {title_type}, no ratings found")
             continue
+        pages = ceil(votes_total / MOVIES_PER_PAGE)
         end_page = pages if last_page is None else min(last_page, pages)
         if first_page > end_page:
             logger.info(
@@ -214,7 +214,7 @@ def main():
             writer.write_details(movies, write_stdout, formats)
         else:
             assert formats and formats.issubset({"csv", "json", "letterboxd"}), (
-                f"Supported file formats: {supported_formats}"
+                "Supported file formats: csv, json, letterboxd"
             )
             user, movies = user_export(args, pool)
             writer.write_user_export(movies, user, write_stdout, formats)
