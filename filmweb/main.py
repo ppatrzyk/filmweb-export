@@ -2,6 +2,7 @@
 
 Usage:
     filmweb details [--format=<fileformat>]... [--stdout] [--workers=<n>] [--debug] <id>...
+    filmweb search [--format=<fileformat>]... [--stdout] [--type=<titletype>]... [--pages=<range>] [--workers=<n>] [--debug] <query>...
     filmweb [--format=<fileformat>]... [--stdout] [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
 
 Options:
@@ -37,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 CPU_COUNT = multiprocessing.cpu_count()
 MOVIES_PER_PAGE = 100
+SEARCH_PAGE_SIZE = 25
 
 
 def _get_details(ids: tuple[int], pool: multiprocessing.Pool):
@@ -67,6 +69,51 @@ def details(args: dict, pool: multiprocessing.Pool):
         ids,
         [details, global_rating],
     )
+
+
+def search(args: dict, pool: multiprocessing.Pool):
+    """Search titles by text, then get info (incl. poster) about found titles"""
+    query = " ".join(args["<query>"]).strip()
+    assert query, "Empty search query"
+    title_types = parser.normalize_title_types(args["--type"])
+    first_page, last_page = parser.parse_pages(args["--pages"])
+    logger.info(f"Searching for '{query}' [1/2]...")
+    search_results = []
+    for title_type in title_types:
+        results_total = getter.search_check_total(query=query, title_type=title_type)
+        if results_total == 0:
+            logger.info(f"Skipping {title_type}, no results found")
+            continue
+        pages = ceil(results_total / SEARCH_PAGE_SIZE)
+        end_page = pages if last_page is None else min(last_page, pages)
+        if first_page > end_page:
+            logger.info(
+                f"Skipping {title_type}, requested pages start after last page ({pages})"
+            )
+            continue
+        pages_to_fetch = end_page - first_page + 1
+        logger.info(
+            f"Fetching search results for {title_type} (pages {first_page}-{end_page} of {pages})..."
+        )
+        search_args = (
+            (query, title_type, page, SEARCH_PAGE_SIZE)
+            for page in range(first_page, end_page + 1)
+        )
+        search_raw = tuple(
+            tqdm.tqdm(
+                pool.imap_unordered(getter.search, search_args),
+                total=pages_to_fetch,
+            )
+        )
+        search_results.extend(
+            tuple(
+                itertools.chain.from_iterable(
+                    json.loads(el).get("searchHits", []) for el in search_raw
+                )
+            )
+        )
+    movies = tuple(parser.parse_search_entry(entry) for entry in search_results)
+    return query, movies
 
 
 def user_export(args: dict, pool: multiprocessing.Pool):
@@ -153,14 +200,22 @@ def main():
             assert len(formats) == 1, (
                 f"Only one format can be written to stdout, passed: {formats}"
             )
-        supported_formats = {"csv", "json", "letterboxd"}
-        assert formats and formats.issubset(supported_formats), (
-            f"Supported file formats: {supported_formats}"
-        )
-        if args["details"]:
+        if args["search"]:
+            assert formats.issubset({"csv", "json"}), (
+                "Search supports file formats: csv, json"
+            )
+            query, movies = search(args, pool)
+            writer.write_search(movies, query, write_stdout, formats)
+        elif args["details"]:
+            assert formats.issubset({"csv", "json"}), (
+                "Search supports file formats: csv, json"
+            )
             movies = details(args, pool)
             writer.write_details(movies, write_stdout, formats)
         else:
+            assert formats and formats.issubset({"csv", "json", "letterboxd"}), (
+                f"Supported file formats: {supported_formats}"
+            )
             user, movies = user_export(args, pool)
             writer.write_user_export(movies, user, write_stdout, formats)
     except Exception as e:  # noqa

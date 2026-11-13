@@ -163,3 +163,12 @@ def parse_ids(raw_ids: list[str]) -> tuple[int]:
     for raw_id in raw_ids:
         assert raw_id.isdigit(), f"Title id must be a number, got: {raw_id}"
     return tuple(dict.fromkeys(int(raw_id) for raw_id in raw_ids))
+
+
+def parse_search_entry(entry: dict) -> dict:
+    return {
+        "movie_id": entry.get("id"),
+        "type": TITLE_TYPE_OUTPUT_MAPPING.get(entry.get("type"), entry.get("type")),
+        "matched_title": entry.get("matchedTitle"),
+        "matched_lang": entry.get("matchedLang"),
+    }

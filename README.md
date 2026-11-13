@@ -33,6 +33,8 @@ Pobierz z zakładki [Releases](https://github.com/ppatrzyk/filmweb-export/releas
 
 ## Instrukcja
 
+Zobacz też [przykłady](#przykład) wraz z danymi.
+
 ### Dane użytkownika
 
 Istnieje możliwość eksportu własnych ocen lub ocen znajomych - proszę podać nazwę użytkownika jako `username`. Do dostępu jest potrzebne zalogowanie się na portal i podanie do skryptu wartości `cookie` dla strony filmweb. Podstawowe użycie:
@@ -47,6 +49,12 @@ filmweb <username> <cookie>
 
 ```bash
 filmweb <id>
+```
+
+### Wyszukiwanie
+
+```bash
+filmweb search <query>
 ```
 
 ### Ograniczanie obciążenia serwera
@@ -234,6 +242,36 @@ INFO:filmweb.parser:Writing data...
 ]
 ```
 
+#### Wyszukiwanie
+
+```bash
+$ filmweb search --stdout --type film wściekłe pięści węża | jq
+INFO:filmweb.main:Searching for 'wściekłe pięści węża' [1/2]...
+INFO:filmweb.main:Fetching search results for film (pages 1-1 of 1)...
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  1.03it/s]
+INFO:filmweb.writer:Writing data...
+[
+  {
+    "movie_id": 389424,
+    "type": "movie",
+    "matched_title": "Wściekłe pięści węża 2",
+    "matched_lang": "pl-PL"
+  },
+  {
+    "movie_id": 311861,
+    "type": "movie",
+    "matched_title": "Wściekłe pięści Węża",
+    "matched_lang": "pl-PL"
+  },
+  {
+    "movie_id": 704550,
+    "type": "movie",
+    "matched_title": "Wściekłe pięści Węża 3",
+    "matched_lang": "pl-PL"
+  }
+]
+```
+
 ### Wszystkie opcje
 
 ```bash
@@ -242,6 +280,7 @@ filmweb
 
 Usage:
     filmweb details [--format=<fileformat>]... [--stdout] [--workers=<n>] [--debug] <id>...
+    filmweb search [--format=<fileformat>]... [--stdout] [--type=<titletype>]... [--pages=<range>] [--workers=<n>] [--debug] <query>...
     filmweb [--format=<fileformat>]... [--stdout] [--type=<titletype>]... [--workers=<n>] [--pages=<range>] [--since=<date>] [--debug] <username> <cookie>
 
 Options:
@@ -265,11 +304,11 @@ Source:
 
 Kolumna | Opis
 --- | ---
-movie\_id | _id filmu_ (filmweb)
-timestamp | _[czas oceny (unix)](https://pl.wikipedia.org/wiki/Czas_uniksowy)_
-date | _data oceny_ (yyyy-mm-dd)
-favorite | _dodany do ulubionych_
-user\_rating | _ocena użytkownika_
+movie\_id | _id filmu_
+timestamp | _[czas oceny (unix)](https://pl.wikipedia.org/wiki/Czas_uniksowy)_ (user export)
+date | _data oceny_ (user export)
+favorite | _dodany do ulubionych_ (user export)
+user\_rating | _ocena użytkownika_ (user export)
 global\_rating | _ocena filmweb_
 global\_rating\_count | _ilość ocen filmu_
 global\_rating\_histogram | _rozkład ocen filmu_

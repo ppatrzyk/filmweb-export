@@ -1,6 +1,7 @@
 import csv
 import json
 import logging
+import re
 import sys
 from contextlib import nullcontext
 from datetime import datetime
@@ -29,6 +30,12 @@ USER_EXPORT_KEYS = DETAILS_KEYS + (
     "timestamp",
     "favorite",
     "user_rating",
+)
+SEARCH_KEYS = (
+    "movie_id",
+    "type",
+    "matched_title",
+    "matched_lang",
 )
 
 
@@ -99,6 +106,21 @@ def write_details(movies: tuple[dict], write_stdout: bool, formats: set) -> bool
         date = datetime.now().strftime("%Y%m%d")
         file_name = f"details_{date}"
     return _write_data(movies, DETAILS_KEYS, file_name, formats)
+
+
+def write_search(
+    movies: tuple[dict],
+    query: str,
+    write_stdout: bool,
+    formats: set[str],
+    embed_images: bool = False,
+) -> bool:
+    file_name = None
+    if not write_stdout:
+        date = datetime.now().strftime("%Y%m%d")
+        slug = re.sub(r"\W+", "_", query.lower()).strip("_")[:40] or "query"
+        file_name = f"search_{slug}_{date}"
+    return _write_data(movies, SEARCH_KEYS, file_name, formats)
 
 
 def write_user_export(

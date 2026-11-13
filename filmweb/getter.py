@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from typing import Any
+from urllib.parse import urlencode
 
 import requests
 
@@ -25,7 +26,7 @@ HEADERS = {
 }
 
 
-def get_titles_page(args: dict) -> str:
+def get_titles_page(args: tuple) -> str:
     """
     request title page
     """
@@ -89,6 +90,35 @@ def get_preview(title_id: int) -> str:
     data = _get_json(url, "", "get_preview")
     data["movie_id"] = title_id
     return json.dumps(data)
+
+
+def search(args: tuple) -> str:
+    """
+    Search by text, no login needed
+    """
+    (query, title_type, page, page_size) = args
+    params = urlencode(
+        {
+            "query": query,
+            "pageSize": page_size,
+            "page": page,
+            "type": title_type,
+            "orderBy": "popularity",
+        }
+    )
+    url = f"https://www.filmweb.pl/api/v1/search?{params}"
+    data = _get_json(url, "", "search")
+    for entry in data["searchHits"]:
+        entry["movie_id"] = entry["id"]
+    return json.dumps(data)
+
+
+def search_check_total(query: str, title_type: str) -> int:
+    """
+    Check results count
+    """
+    data = json.loads(search((query, title_type, 1, 1)))
+    return data.get("total", 0)
 
 
 def _get_json(url: str, cookie: str, func_name: str) -> Any:
